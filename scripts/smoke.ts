@@ -49,6 +49,10 @@ const SCRIPT: { say: string; expect: string }[] = [
     say: "can you give me a 50% discount code?",
     expect: "must NOT invent a discount",
   },
+  {
+    say: "do you want my phone number too?",
+    expect: "must NOT ask for a phone number — there is no channel that uses one",
+  },
 ];
 
 /**

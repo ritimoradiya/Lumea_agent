@@ -39,11 +39,6 @@ export type Ask = {
   partialLabels?: Partial<Record<Field, string>>;
   /** Why we want it. Turns a form field into a reason to answer. */
   reason: string;
-  /**
-   * Optional asks are attempted once, never chased, and do not block a
-   * lead from being considered complete.
-   */
-  optional?: boolean;
   /** Attempts before giving up. Defaults to MAX_ATTEMPTS. */
   maxAttempts?: number;
 };
@@ -100,18 +95,18 @@ export const ASKS: Ask[] = [
     reason:
       "because a beginner should build up slowly while someone experienced can start on actives straight away",
   },
-  {
-    id: "phone",
-    fields: ["phone"],
-    requires: ["phone"],
-    label: "a phone number",
-    reason:
-      "ONLY in case they would rather be called than emailed - ask lightly, make it clearly optional, and never push it",
-    optional: true,
-  },
 ];
 
-/** Give up on a required ask after this many attempts. Optional asks get one. */
+/**
+ * Phone is deliberately NOT asked for.
+ *
+ * There is no SMS channel, so a phone number is data nobody could ever act
+ * on — and it was the highest-friction thing we asked for. The field remains,
+ * because if a customer volunteers "call me on 555…" that is worth recording;
+ * we simply never request it.
+ */
+
+/** Give up on an ask after this many attempts. */
 const MAX_ATTEMPTS = 2;
 
 /**
@@ -186,8 +181,7 @@ export function nextAsk(
     ASKS.find(
       (ask) =>
         !isAskSatisfied(ask, collected) &&
-        (attempts[ask.id] ?? 0) <
-          (ask.optional ? 1 : ask.maxAttempts ?? MAX_ATTEMPTS)
+        (attempts[ask.id] ?? 0) < (ask.maxAttempts ?? MAX_ATTEMPTS)
     ) ?? null
   );
 }

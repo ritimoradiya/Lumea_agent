@@ -208,7 +208,11 @@ export default async function InboxPage({
                   }`}
                 >
                   {selected.collected[f] ??
-                    (f === "phone" ? "not given — optional" : "—")}
+                    (f === "phone"
+                      ? "never asked for"
+                      : f === "lastName" || f === "experience"
+                        ? "not given"
+                        : "—")}
                 </div>
               </div>
             ))}
