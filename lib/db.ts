@@ -96,6 +96,8 @@ export async function syncCompany(company: Company): Promise<string> {
 
 export type LoadedConversation = {
   id: string;
+  /** True when a person has taken over; the agent must not reply. */
+  humanHandled: boolean;
   state: ConversationState;
   /** Prior turns, oldest first, for the model's context window. */
   history: { role: "user" | "assistant"; content: string }[];
@@ -117,7 +119,7 @@ export async function loadConversation(
 
   const { data: existing } = await supabase
     .from("conversations")
-    .select("id, collected, attempts, last_ask_id")
+    .select("id, collected, attempts, last_ask_id, status")
     .eq("company_id", companyId)
     .eq("channel", channel)
     .eq("channel_thread_id", threadId)
@@ -133,6 +135,7 @@ export async function loadConversation(
 
     return {
       id: existing.id as string,
+      humanHandled: existing.status === "human",
       state: {
         collected: existing.collected ?? {},
         attempts: existing.attempts ?? {},
@@ -162,6 +165,7 @@ export async function loadConversation(
 
   return {
     id: created.id as string,
+    humanHandled: false,
     state: emptyState(),
     history: [],
     isNew: true,

@@ -15,6 +15,11 @@ export const dynamic = "force-dynamic";
 const Body = z.object({
   threadId: z.string().min(8).max(120),
   text: z.string().min(1).max(2000),
+  /**
+   * Only the two browser-driven channels are selectable. Accepting any
+   * channel here would let a page impersonate Telegram or email.
+   */
+  channel: z.enum(["web", "simulator"]).default("web"),
 });
 
 /** The opening line, so the widget can greet before the first message. */
@@ -40,7 +45,7 @@ export async function POST(request: Request) {
 
       try {
         const result = await handleInbound(
-          { channel: "web", threadId: body.threadId, text: body.text },
+          { channel: body.channel, threadId: body.threadId, text: body.text },
           (token) => send({ token })
         );
         send({

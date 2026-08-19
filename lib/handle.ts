@@ -5,6 +5,7 @@ import { generateRoutine } from "./agent/routine";
 import { isLeadComplete } from "./agent/checklist";
 import { sendLeadAlert, sendRoutineToCustomer } from "./email";
 import {
+  db,
   createLeadIfNew,
   isLeadNotified,
   loadConversation,
@@ -32,6 +33,8 @@ export type InboundInput = {
 
 export type InboundResult = {
   reply: string;
+  /** True when a person has taken over and the agent deliberately stayed quiet. */
+  handedToHuman: boolean;
   greeting: string | null;
   complete: boolean;
   mode: string;
@@ -62,6 +65,28 @@ export async function handleInbound(
     input.channel,
     input.threadId
   );
+
+  // A person has taken this thread over. Save what the customer said so it
+  // appears in the admin inbox, but do not reply — two answers in two voices
+  // is worse than one slightly slower answer from a person.
+  if (conversation.humanHandled) {
+    await db()
+      .from("messages")
+      .insert({
+        conversation_id: conversation.id,
+        role: "customer",
+        body: input.text,
+      });
+
+    return {
+      reply: "",
+      handedToHuman: true,
+      greeting: null,
+      complete: isLeadComplete(conversation.state.collected),
+      mode: "human",
+      collected: conversation.state.collected,
+    };
+  }
 
   const result = await respond(
     {
@@ -100,6 +125,7 @@ export async function handleInbound(
 
   return {
     reply: result.reply,
+    handedToHuman: false,
     // Only on a thread's first message, so the widget can show it above the reply.
     greeting: conversation.isNew ? greetingFor(company) : null,
     complete: result.complete,

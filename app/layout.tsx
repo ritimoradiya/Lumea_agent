@@ -7,7 +7,11 @@ export const metadata: Metadata = {
     "Fragrance-free, dermatologist-tested skincare. Twelve products, no filler, no upsell. Formulated in Copenhagen.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full">
