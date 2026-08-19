@@ -4,6 +4,7 @@ import ChatWidget from "@/components/ChatWidget";
 import OpenChatButton from "@/components/OpenChatButton";
 import ProductImage from "@/components/ProductImage";
 import Reveal from "@/components/Reveal";
+import FloatingProduct from "@/components/FloatingProduct";
 import { getCompany, type Product } from "@/lib/company";
 
 const CATEGORY_ORDER = ["Cleanse", "Treat", "Hydrate", "Protect"];
@@ -91,7 +92,7 @@ export default async function Home() {
                        transition-transform duration-500 hover:-translate-y-0.5"
             style={{ transitionTimingFunction: "var(--ease-spring)" }}
           >
-            Shop the twelve
+            Shop the range
           </a>
           <a
             href="#routine"
@@ -111,10 +112,11 @@ export default async function Home() {
       >
         <div className="mx-auto max-w-[1180px]">
           <h2 className="font-serif text-[38px] tracking-[-0.02em]">
-            The twelve
+            The range
           </h2>
           <p className="mt-3 max-w-[420px] text-[15px] leading-relaxed text-muted">
-            Four steps, twelve products. Most people need three or four of them.
+            Four steps. Most people need three or four products, not the whole
+            shelf.
           </p>
 
           {groups.map(({ category, items }) => (
@@ -122,25 +124,29 @@ export default async function Home() {
               <h3 className="mb-6 text-[11px] uppercase tracking-[0.16em] text-faint">
                 {category}
               </h3>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 {items.map((p, i) => (
-                  <Reveal key={p.id} delay={i * 70}>
+                  <Reveal key={p.id} delay={i * 70} className="h-full">
                   <Link
                     href={`/products/${p.id}`}
-                    className="group flex flex-col rounded-[14px] border hairline bg-white/45
-                               p-5 backdrop-blur-sm transition-all duration-500
+                    /* A fixed height, not h-full: each category is its own grid, so
+                       row-based equalising cannot make all twelve match. */
+                    className="group flex h-[352px] flex-col rounded-[14px] border hairline
+                               bg-white/45 p-5 backdrop-blur-sm transition-all duration-500
                                hover:-translate-y-1 hover:bg-white/70"
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
-                    <ProductImage
-                      product={p}
-                      compact
-                      className="mb-5 h-[150px] w-full rounded-[10px]"
-                    />
+                    <FloatingProduct hoverOnly className="mb-5">
+                      <ProductImage
+                        product={p}
+                        compact
+                        className="h-[150px] w-full rounded-[10px]"
+                      />
+                    </FloatingProduct>
                     <span className="font-serif text-[18px] leading-tight tracking-[-0.01em]">
                       {p.name}
                     </span>
-                    <span className="mt-2 flex-1 text-[13px] leading-[1.55] text-muted">
+                    <span className="mt-2 line-clamp-3 flex-1 text-[13px] leading-[1.55] text-muted">
                       {p.summary}
                     </span>
                     <span className="mt-4 flex items-center justify-between text-[13px]">

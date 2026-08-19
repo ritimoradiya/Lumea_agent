@@ -156,12 +156,12 @@ export default async function ProductPage({
             <h2 className="mb-8 text-[11px] uppercase tracking-[0.16em] text-faint">
               Also in {product.category}
             </h2>
-            <div className="grid gap-5 sm:grid-cols-3">
+            <div className="grid items-stretch gap-5 sm:grid-cols-3">
               {related.map((p) => (
                 <Link
                   key={p.id}
                   href={`/products/${p.id}`}
-                  className="group flex flex-col rounded-[14px] border hairline bg-white/45 p-5
+                  className="group flex h-[326px] flex-col rounded-[14px] border hairline bg-white/45 p-5
                              transition-all duration-500 hover:-translate-y-1 hover:bg-white/70"
                   style={{ transitionTimingFunction: "var(--ease-spring)" }}
                 >
@@ -173,7 +173,7 @@ export default async function ProductPage({
                   <span className="font-serif text-[17px] tracking-[-0.01em]">
                     {p.name}
                   </span>
-                  <span className="mt-2 text-[13px] leading-[1.55] text-muted">
+                  <span className="mt-2 line-clamp-3 flex-1 text-[13px] leading-[1.55] text-muted">
                     {p.summary}
                   </span>
                   <span className="mt-4 text-[13px]">{p.price}</span>

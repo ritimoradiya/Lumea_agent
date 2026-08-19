@@ -204,14 +204,32 @@ export default function ProductImage({ product, className, compact }: Props) {
         <path d={v.body} fill={`url(#b${uid})`} />
         <path d={v.body} fill={`url(#f${uid})`} />
 
-        {/* Specular reflections, drawn BEFORE the label so print sits on top. */}
-        <g clipPath={`url(#cl${uid})`}>
+        {/* Specular reflections, drawn BEFORE the label so print sits on top.
+            They travel with --spin: on a rotating cylinder the highlight moves
+            across the surface rather than staying put. */}
+        <g
+          clipPath={`url(#cl${uid})`}
+          style={{
+            transform: "translateX(calc(var(--spin, 0) * 13px))",
+            transition: "transform .05s linear",
+          }}
+        >
           <rect x="79" y="112" width="6.5" height="96" rx="3.2" fill="#fff" opacity=".42" filter={`url(#sf${uid})`} />
           <rect x="130" y="120" width="3" height="80" rx="1.5" fill="#fff" opacity=".2" filter={`url(#sf${uid})`} />
         </g>
 
-        {/* The label — dominant, as on a real bottle. */}
-        <g clipPath={`url(#cl${uid})`}>
+        {/* The label — dominant, as on a real bottle. It compresses and
+            slides as the bottle turns, which is what actually sells the
+            rotation; a flat skew alone reads as a tilted picture. */}
+        <g
+          clipPath={`url(#cl${uid})`}
+          style={{
+            transform:
+              "translateX(calc(var(--spin, 0) * 9px)) scaleX(var(--spin-flat, 1))",
+            transformOrigin: "100px center",
+            transition: "transform .05s linear",
+          }}
+        >
           <rect x="44" y={v.label.y} width="112" height={v.label.h} fill={`url(#l${uid})`} />
           <text
             x="100"
