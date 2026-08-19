@@ -27,7 +27,8 @@
         "How to use": "Massage onto dry skin, add water to emulsify, rinse, then follow with Clarity."
       },
       "notes": "Only needed at night, and only if you wear sunscreen or makeup.",
-      "tint": "#8a5a24"
+      "tint": "#8a5a24",
+      "texture": "oil"
     },
     {
       "id": "clarity-cleanser",
@@ -42,7 +43,8 @@
         "How to use": "Massage into damp skin for 30 seconds, rinse with lukewarm water."
       },
       "notes": "pH 5.5. Safe twice daily, including on sensitive skin.",
-      "tint": "#6f7f62"
+      "tint": "#6f7f62",
+      "texture": "gel"
     },
     {
       "id": "dawn-vitamin-c",
@@ -57,7 +59,8 @@
         "How to use": "Four drops to clean dry skin before moisturiser."
       },
       "notes": "Use in the morning. Do not layer in the same routine as Renew Retinol - alternate morning and night instead.",
-      "tint": "#9c6320"
+      "tint": "#9c6320",
+      "texture": "oil"
     },
     {
       "id": "even-niacinamide",
@@ -72,7 +75,8 @@
         "How to use": "Two drops morning or night, before moisturiser."
       },
       "notes": "Pairs safely with everything else in the range, including retinol.",
-      "tint": "#7d6f5c"
+      "tint": "#7d6f5c",
+      "texture": "water"
     },
     {
       "id": "smooth-pha",
@@ -87,7 +91,8 @@
         "How to use": "Sweep over clean dry skin at night. Do not use on the same night as Renew Retinol."
       },
       "notes": "PHAs have a larger molecule than AHAs, so they work more slowly and sting far less. Start twice weekly.",
-      "tint": "#5f6b62"
+      "tint": "#5f6b62",
+      "texture": "water"
     },
     {
       "id": "renew-retinol",
@@ -102,7 +107,8 @@
         "How to use": "A pea-sized amount at night, after cleansing, before moisturiser."
       },
       "notes": "Start twice weekly and build up. Always pair with daily sunscreen. Not suitable during pregnancy or breastfeeding.",
-      "tint": "#6e3f22"
+      "tint": "#6e3f22",
+      "texture": "oil"
     },
     {
       "id": "quench-serum",
@@ -117,7 +123,8 @@
         "How to use": "Three drops to damp skin, then follow immediately with a cream."
       },
       "notes": "Apply to slightly damp skin, then seal with a moisturiser.",
-      "tint": "#6b7a80"
+      "tint": "#6b7a80",
+      "texture": "water"
     },
     {
       "id": "shield-cream",
@@ -132,7 +139,8 @@
         "How to use": "Morning and night, as the last step before sunscreen."
       },
       "notes": "Fragrance-free and non-comedogenic.",
-      "tint": "#7f9070"
+      "tint": "#7f9070",
+      "texture": "cream"
     },
     {
       "id": "recover-night",
@@ -147,7 +155,8 @@
         "How to use": "A thick layer at night, as your final step."
       },
       "notes": "Heavier than Shield. Most people want one or the other, not both.",
-      "tint": "#4f4a42"
+      "tint": "#4f4a42",
+      "texture": "cream"
     },
     {
       "id": "bright-eye",
@@ -162,7 +171,8 @@
         "How to use": "Tap a rice-grain amount around the orbital bone, morning and night."
       },
       "notes": "Will not remove dark circles caused by pigment or genetics - we would rather say so.",
-      "tint": "#a08a5c"
+      "tint": "#a08a5c",
+      "texture": "cream"
     },
     {
       "id": "daylight-spf",
@@ -177,7 +187,8 @@
         "How to use": "A generous layer as the final morning step, every day."
       },
       "notes": "Leaves a very slight cast on deeper skin tones. Reapply every two hours of direct sun.",
-      "tint": "#c9bda4"
+      "tint": "#c9bda4",
+      "texture": "cream"
     },
     {
       "id": "veil-tinted-spf",
@@ -192,7 +203,8 @@
         "How to use": "Smooth over the face as the final morning step."
       },
       "notes": "Three shades. SPF 30 rather than 50 - if you are in strong sun, reach for Daylight instead.",
-      "tint": "#a8917a"
+      "tint": "#a8917a",
+      "texture": "cream"
     }
   ],
   "faqs": [

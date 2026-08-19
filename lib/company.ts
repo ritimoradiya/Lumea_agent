@@ -22,6 +22,8 @@ export const ProductSchema = z.object({
    * any one of them can be adjusted without touching code.
    */
   tint: z.string().optional(),
+  /** How the product physically behaves, for the texture swatch. */
+  texture: z.enum(["gel", "oil", "cream", "water"]).default("cream"),
   price: z.string().optional(),
   summary: z.string(),
   /** Free-form spec sheet. Skincare uses "Key ingredients"; freight uses "Equipment". */
@@ -104,6 +106,21 @@ export function loadCompanyFromFile(slug: string): Company {
  */
 export async function getCompany(slug?: string): Promise<Company> {
   return loadCompanyFromFile(slug ?? process.env.COMPANY_SLUG ?? "lumea");
+}
+
+/**
+ * A photograph for this product, if one has been added.
+ *
+ * Returns null when the file is absent, so the drawn SVG is used instead.
+ * That means photography can arrive one product at a time without anything
+ * breaking in between.
+ */
+export function photoFor(productId: string): string | null {
+  for (const ext of ["jpg", "jpeg", "png", "webp"]) {
+    const rel = `/products/${productId}.${ext}`;
+    if (fs.existsSync(path.join(process.cwd(), "public", rel))) return rel;
+  }
+  return null;
 }
 
 /** Compact catalogue text for the system prompt. */

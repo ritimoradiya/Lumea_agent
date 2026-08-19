@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProductImage from "@/components/ProductImage";
 import FloatingProduct from "@/components/FloatingProduct";
+import TextureSwatch from "@/components/TextureSwatch";
 import ChatWidget from "@/components/ChatWidget";
 import AskAboutButton from "@/components/AskAboutButton";
 import { getCompany } from "@/lib/company";
@@ -131,6 +132,28 @@ export default async function ProductPage({
                 </div>
               ))}
             </dl>
+
+            <div className="mt-9">
+              <h2 className="text-[11px] uppercase tracking-[0.16em] text-faint">
+                Texture
+              </h2>
+              <div className="mt-3 flex items-center gap-4">
+                <TextureSwatch
+                  texture={product.texture}
+                  tint={product.tint ?? "#c9b896"}
+                  className="h-[76px] w-[76px] flex-none rounded-[10px]"
+                />
+                <p className="text-[13.5px] leading-[1.6] text-muted">
+                  {product.texture === "water"
+                    ? "Watery — absorbs in seconds and leaves nothing behind."
+                    : product.texture === "gel"
+                      ? "Gel — cool on the skin, rinses clean."
+                      : product.texture === "oil"
+                        ? "Oil — slower to sink in, and it stays put."
+                        : "Cream — rich enough that you can feel it working."}
+                </p>
+              </div>
+            </div>
 
             {howToUse && (
               <div className="mt-8">

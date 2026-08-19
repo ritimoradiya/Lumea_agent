@@ -5,6 +5,7 @@ import OpenChatButton from "@/components/OpenChatButton";
 import ProductImage from "@/components/ProductImage";
 import Reveal from "@/components/Reveal";
 import FloatingProduct from "@/components/FloatingProduct";
+import TextureSwatch from "@/components/TextureSwatch";
 import { getCompany, type Product } from "@/lib/company";
 
 const CATEGORY_ORDER = ["Cleanse", "Treat", "Hydrate", "Protect"];
@@ -47,6 +48,7 @@ export default async function Home() {
           <a href="#shop">Shop</a>
           <a href="#routine">Routines</a>
           <a href="#claims">Ingredients</a>
+          <a href="#textures">Textures</a>
           <a href="#faq">FAQ</a>
           <a href="#contact">Contact</a>
         </div>
@@ -159,6 +161,52 @@ export default async function Home() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── textures ───────────────────────────────────────────── */}
+      <section
+        id="textures"
+        className="relative z-10 border-t hairline bg-paper px-6 py-24 sm:px-12"
+      >
+        <div className="mx-auto max-w-[1180px]">
+          <h2 className="font-serif text-[38px] tracking-[-0.02em]">
+            How they feel
+          </h2>
+          <p className="mt-3 max-w-[440px] text-[15px] leading-relaxed text-muted">
+            Half of choosing skincare is texture. Ours run from almost-water to
+            genuinely rich.
+          </p>
+
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { texture: "water" as const, tint: "#9fb4bd", name: "Watery", note: "Quench, Smooth, Even — absorb in seconds and disappear." },
+              { texture: "gel" as const, tint: "#8fae9c", name: "Gel", note: "Clarity — cool on the skin, rinses clean." },
+              { texture: "oil" as const, tint: "#c08d45", name: "Oil", note: "Dissolve, Dawn, Renew — slower, and they stay put." },
+              { texture: "cream" as const, tint: "#ded2be", name: "Cream", note: "Shield, Recover, Daylight — the ones you can feel working." },
+            ].map((t, i) => (
+              <Reveal key={t.texture} delay={i * 90}>
+                <figure>
+                  <TextureSwatch
+                    texture={t.texture}
+                    tint={t.tint}
+                    className="h-[210px] w-full rounded-[14px]"
+                  />
+                  <figcaption className="mt-4">
+                    <span className="font-serif text-[18px]">{t.name}</span>
+                    <span className="mt-1.5 block text-[13px] leading-[1.55] text-muted">
+                      {t.note}
+                    </span>
+                  </figcaption>
+                </figure>
+              </Reveal>
+            ))}
+          </div>
+
+          <p className="mt-10 max-w-[540px] text-[11.5px] leading-relaxed text-faint">
+            These are generated live on your device rather than photographed —
+            each one is a shader, a few lines of maths, no image to download.
+          </p>
         </div>
       </section>
 

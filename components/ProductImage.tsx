@@ -1,4 +1,5 @@
-import type { Product } from "@/lib/company";
+import Image from "next/image";
+import { photoFor, type Product } from "@/lib/company";
 
 /**
  * Product renderings, drawn rather than photographed.
@@ -134,6 +135,22 @@ function Cylinder({ id, base }: { id: string; base: string }) {
 }
 
 export default function ProductImage({ product, className, compact }: Props) {
+  // A real photograph beats any drawing, so use one the moment it exists.
+  const photo = photoFor(product.id);
+  if (photo) {
+    return (
+      <div className={`relative overflow-hidden ${className ?? ""}`}>
+        <Image
+          src={photo}
+          alt={`${product.name}, ${product.category}`}
+          fill
+          sizes="(max-width: 640px) 100vw, 300px"
+          className="object-cover"
+        />
+      </div>
+    );
+  }
+
   const uid = product.id.replace(/[^a-z0-9]/gi, "");
   const tint = product.tint ?? DEFAULT_TINT;
   const v = VESSELS[vesselFor(product)];
