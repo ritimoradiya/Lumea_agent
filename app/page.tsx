@@ -1,6 +1,7 @@
 import Link from "next/link";
 import LiquidHero from "@/components/LiquidHero";
 import ChatWidget from "@/components/ChatWidget";
+import ProductImage from "@/components/ProductImage";
 import { getCompany, type Product } from "@/lib/company";
 
 const CATEGORY_ORDER = ["Cleanse", "Treat", "Hydrate", "Protect"];
@@ -128,7 +129,11 @@ export default async function Home() {
                                hover:-translate-y-1 hover:bg-white/70"
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
-                    <div className="mb-5 h-[150px] rounded-[10px] bg-gradient-to-br from-stone to-[#dcd3c6]" />
+                    <ProductImage
+                      category={p.category}
+                      seed={p.id}
+                      className="mb-5 h-[150px] w-full rounded-[10px]"
+                    />
                     <span className="font-serif text-[18px] leading-tight tracking-[-0.01em]">
                       {p.name}
                     </span>

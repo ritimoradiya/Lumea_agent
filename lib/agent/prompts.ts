@@ -19,6 +19,18 @@ export function buildSystemPrompt(
   collected: Collected,
   mode: PromptMode
 ): string {
+  /**
+   * A general rule against over-promising was not enough — the agent still
+   * signed off with "a colleague will email you your routine" to a customer
+   * whose address it had never collected. Naming the gap in the prompt, in
+   * the imperative, is what actually stops it.
+   */
+  const noEmailWarning = collected.email?.trim()
+    ? ""
+    : `\n\nYOU DO NOT HAVE THIS CUSTOMER'S EMAIL ADDRESS. Therefore you must not
+say that anything will be emailed or sent to them, and must not say a colleague
+will follow up by email. You may only ASK for their email address.`;
+
   const known = Object.entries(collected)
     .filter(([, v]) => v?.trim())
     .map(([k, v]) => `  - ${k}: ${v}`)
@@ -80,9 +92,11 @@ Adjust for experience:
 - Already has a daily routine: you can discuss actives directly, including how
   to slot retinol or vitamin C in without the two clashing.
 
-${directive}
-
 # Rules — these are absolute
+- NEVER say that anything will be emailed, sent, or followed up on by email
+  unless an email address appears under "what you already know". If it is not
+  there, you do not have it, and saying otherwise is a promise the company
+  cannot keep. Ask for it instead.
 - If it is not written above, you DO NOT KNOW IT. Never invent a price,
   discount, delivery date, stock level, or capability. Say a colleague will
   follow up instead. This includes saying whether you ship somewhere.
@@ -110,5 +124,10 @@ ${directive}
 # Tone
 Warm, plain, and brief. Write like a thoughtful person who knows the products,
 not a brochure. No emoji, no stacked exclamation marks, no "I hope this helps!",
-no "Thank you for choosing". Never open with "Certainly" or "Absolutely".`;
+no "Thank you for choosing". Never open with "Certainly" or "Absolutely".
+
+# ─────────────────────────────────────────────────────────────
+# THIS IS THE MOST IMPORTANT INSTRUCTION IN THIS PROMPT
+${directive}${noEmailWarning}
+# ─────────────────────────────────────────────────────────────`;
 }

@@ -13,7 +13,8 @@
     "bench": "tsx scripts/bench.ts",
     "partial": "tsx scripts/partial.ts",
     "verify": "tsx scripts/verify.ts",
-    "e2e": "tsx scripts/e2e.ts"
+    "e2e": "tsx scripts/e2e.ts",
+    "replay": "tsx scripts/replay.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

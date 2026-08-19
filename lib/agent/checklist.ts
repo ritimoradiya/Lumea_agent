@@ -49,10 +49,16 @@ export type Ask = {
 };
 
 /**
- * Consultation order, not form order. Someone messaging a skincare brand
- * has a problem — understand their skin and their experience level first,
- * because those change what you should recommend. Contact details come
- * after you have been useful.
+ * Contact details come FIRST, deliberately.
+ *
+ * They used to be queued behind the skin questions, on the theory that you
+ * should earn them by being useful. In practice the conversation reached
+ * wrap-up before the ask ever landed, and the agent cheerfully promised to
+ * email a routine to a customer whose address it had never collected.
+ *
+ * The greeting already opens with a question about their skin, so asking
+ * who they are on the next turn is not a cold form — and it means every
+ * later promise to email something is one we can actually keep.
  *
  * Every ask carries a `reason`. "What's your email?" is a form; "so a
  * specialist can send you a written routine" is a service.
@@ -63,6 +69,21 @@ export type Ask = {
  * it and move on.
  */
 export const ASKS: Ask[] = [
+  {
+    id: "contact",
+    fields: ["firstName", "lastName", "email"],
+    requires: ["firstName", "email"],
+    label: "their name and email address",
+    partialLabels: {
+      firstName: "their name",
+      email: "their email address",
+    },
+    reason:
+      "so we can email them a written routine to keep - do NOT say a specialist or a person writes it, because it is generated automatically",
+    // Email is the single most valuable detail here, so it gets one more
+    // attempt than everything else before we give up on it.
+    maxAttempts: 3,
+  },
   {
     id: "concern",
     fields: ["description"],
@@ -78,21 +99,6 @@ export const ASKS: Ask[] = [
       "whether they already have a daily routine or are starting out for the first time",
     reason:
       "because a beginner should build up slowly while someone experienced can start on actives straight away",
-  },
-  {
-    id: "contact",
-    fields: ["firstName", "lastName", "email"],
-    requires: ["firstName", "email"],
-    label: "their name and email address",
-    partialLabels: {
-      firstName: "their name",
-      email: "their email address",
-    },
-    reason:
-      "so we can email them a written routine to keep - do NOT say a specialist or a person writes it, because it is generated automatically",
-    // Email is the single most valuable detail here, so it gets one more
-    // attempt than everything else before we give up on it.
-    maxAttempts: 3,
   },
   {
     id: "phone",
