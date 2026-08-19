@@ -262,55 +262,70 @@ export default async function Home() {
         className="relative z-10 border-t hairline bg-paper-2 px-6 py-24 sm:px-12"
       >
         <div className="mx-auto max-w-[1180px]">
-          <h2 className="font-serif text-[38px] tracking-[-0.02em]">
-            Reach us
-          </h2>
-          <p className="mt-3 max-w-[460px] text-[15px] leading-relaxed text-muted">
-            However you get in touch, the same assistant answers first and a
-            colleague picks it up from there.
+          <h2 className="font-serif text-[38px] tracking-[-0.02em]">Reach us</h2>
+          <p className="mt-3 max-w-[470px] text-[15px] leading-relaxed text-muted">
+            Four ways in, one assistant behind all of them. Whichever you pick,
+            the same person picks it up afterwards.
           </p>
 
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-[14px] border hairline bg-white/50 p-6">
-              <h3 className="font-serif text-[19px]">Chat</h3>
-              <p className="mt-2.5 text-[13.5px] leading-[1.6] text-muted">
-                Fastest. Answers in about a second, any hour.
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex h-full flex-col rounded-[14px] border hairline bg-white/55 p-6">
+              <h3 className="font-serif text-[19px]">Chat here</h3>
+              <p className="mt-2.5 flex-1 text-[13.5px] leading-[1.6] text-muted">
+                Fastest. Replies in about a second, any hour.
               </p>
               <OpenChatButton />
             </div>
 
-            <div className="rounded-[14px] border hairline bg-white/50 p-6">
-              <h3 className="font-serif text-[19px]">Email</h3>
-              <p className="mt-2.5 text-[13.5px] leading-[1.6] text-muted">
-                Best for anything detailed, or if you would rather write.
-              </p>
-              <a
-                href="mailto:lumea.support01@gmail.com"
-                className="mt-5 inline-block text-[13.5px] underline decoration-black/20 underline-offset-4 hover:decoration-black/50"
-              >
-                lumea.support01@gmail.com
-              </a>
-            </div>
+            {company.contact.telegram && (
+              <div className="flex h-full flex-col rounded-[14px] border hairline bg-white/55 p-6">
+                <h3 className="font-serif text-[19px]">Telegram</h3>
+                <p className="mt-2.5 flex-1 text-[13.5px] leading-[1.6] text-muted">
+                  Message us from your phone and keep the thread.
+                </p>
+                <a
+                  href={`https://t.me/${company.contact.telegram}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-5 inline-block self-start rounded-full bg-ink px-5 py-2.5
+                             text-[13px] font-medium text-paper transition-transform
+                             duration-500 hover:-translate-y-0.5"
+                  style={{ transitionTimingFunction: "var(--ease-spring)" }}
+                >
+                  @{company.contact.telegram}
+                </a>
+              </div>
+            )}
 
-            <div className="rounded-[14px] border hairline bg-white/50 p-6">
-              <h3 className="font-serif text-[19px]">By text</h3>
-              <p className="mt-2.5 text-[13.5px] leading-[1.6] text-muted">
-                Prefer messaging? Try the same assistant in a text thread.
-              </p>
-              <Link
-                href="/demo"
-                className="mt-5 inline-block rounded-full border hairline bg-white/70 px-5 py-2.5 text-[13px]"
-              >
-                Open the thread
-              </Link>
-            </div>
+            {company.contact.email && (
+              <div className="flex h-full flex-col rounded-[14px] border hairline bg-white/55 p-6">
+                <h3 className="font-serif text-[19px]">Email</h3>
+                <p className="mt-2.5 flex-1 text-[13.5px] leading-[1.6] text-muted">
+                  Best for anything detailed. We reply in the same thread.
+                </p>
+                <a
+                  href={`mailto:${company.contact.email}`}
+                  className="mt-5 inline-block self-start text-[13px] underline
+                             decoration-black/20 underline-offset-4 hover:decoration-black/50"
+                >
+                  {company.contact.email}
+                </a>
+              </div>
+            )}
 
-            <div className="rounded-[14px] border hairline bg-white/50 p-6">
+            <div className="flex h-full flex-col rounded-[14px] border hairline bg-white/55 p-6">
               <h3 className="font-serif text-[19px]">Hours</h3>
-              <p className="mt-2.5 text-[13.5px] leading-[1.6] text-muted">
+              <p className="mt-2.5 flex-1 text-[13.5px] leading-[1.6] text-muted">
                 {company.supportHours}. The assistant answers outside them too;
                 a person replies the next working day.
               </p>
+              <Link
+                href="/demo"
+                className="mt-5 inline-block self-start text-[13px] underline
+                           decoration-black/20 underline-offset-4 hover:decoration-black/50"
+              >
+                Try it as a text thread
+              </Link>
             </div>
           </div>
         </div>

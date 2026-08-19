@@ -5,6 +5,10 @@
   "tagline": "Clinical care, quietly done.",
   "about": "Lumea is a small-batch skincare label making fragrance-free, dermatologist-tested essentials. A short range, no filler, no upsell. Everything is vegan and cruelty-free, formulated in Copenhagen.",
   "supportHours": "Monday to Friday, 9am-6pm CET",
+  "contact": {
+    "email": "lumea.support01@gmail.com",
+    "telegram": "LumeaSupportBot"
+  },
   "greeting": "Hi \u2014 I'm Lumea's assistant. What's been bothering your skin lately?",
   "extraRules": [
     "NEVER give medical advice. For pregnancy, breastfeeding, prescription medication, skin conditions, allergies, or a reaction to a product, say it is worth checking with a doctor or dermatologist, and offer to have a human follow up."

@@ -44,6 +44,14 @@ export const CompanySchema = z.object({
   /** First thing a customer sees. Static text: instant, and no risk
    *  of the model fumbling the opening line. */
   greeting: z.string().optional(),
+  /** Where customers can actually reach this company. */
+  contact: z
+    .object({
+      email: z.string().optional(),
+      /** Bot username without the @. */
+      telegram: z.string().optional(),
+    })
+    .default({}),
   /** Industry-specific guardrails appended to the universal rule set. */
   extraRules: z.array(z.string()).default([]),
   products: z.array(ProductSchema).default([]),
