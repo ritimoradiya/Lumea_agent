@@ -14,7 +14,7 @@ import { stdin as input, stdout as output } from "node:process";
 
 import { getBrain } from "../lib/brain";
 import { respond } from "../lib/agent/respond";
-import { progress, type Collected } from "../lib/agent/checklist";
+import { emptyState, progress, type ConversationState } from "../lib/agent/checklist";
 import { getCompany, greetingFor, type Company } from "../lib/company";
 import type { ChatMessage } from "../lib/brain";
 
@@ -37,7 +37,7 @@ async function main() {
   }
 
   let history: ChatMessage[] = [];
-  let collected: Collected = {};
+  let state: ConversationState = emptyState();
 
   console.log(bold(`\n  ${company.name} — support agent`));
   console.log(
@@ -58,13 +58,13 @@ async function main() {
 
     if (line === "/reset") {
       history = [];
-      collected = {};
+      state = emptyState();
       console.log(dim("  conversation reset\n"));
       continue;
     }
 
     if (line === "/state") {
-      console.log(dim(`  ${JSON.stringify(collected, null, 2)}\n`));
+      console.log(dim(`  ${JSON.stringify(state, null, 2)}\n`));
       continue;
     }
 
@@ -73,12 +73,12 @@ async function main() {
 
     try {
       const result = await respond(
-        { brain, company, history, collected, customerMessage: line },
+        { brain, company, history, state, customerMessage: line },
         (token) => process.stdout.write(token)
       );
 
       const elapsed = Date.now() - started;
-      collected = result.collected;
+      state = result.state;
       history.push(
         { role: "user", content: line },
         { role: "assistant", content: result.reply }
@@ -87,7 +87,8 @@ async function main() {
       const learned = Object.keys(result.learned);
       const note = [
         `${elapsed}ms`,
-        `collected ${progress(collected)}`,
+        result.mode,
+        `collected ${progress(state.collected)}`,
         learned.length ? `+${learned.join(", ")}` : "",
       ]
         .filter(Boolean)

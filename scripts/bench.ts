@@ -10,7 +10,7 @@ config({ path: ".env.local", override: true });
 
 import { GroqBrain } from "../lib/brain/groq";
 import { respond } from "../lib/agent/respond";
-import { progress, type Collected } from "../lib/agent/checklist";
+import { emptyState, progress, type ConversationState } from "../lib/agent/checklist";
 import { getCompany } from "../lib/company";
 import type { ChatMessage } from "../lib/brain";
 
@@ -52,7 +52,7 @@ async function main() {
     process.env.GROQ_MODEL = model;
     const brain = new GroqBrain();
     const history: ChatMessage[] = [];
-    let collected: Collected = {};
+    let state: ConversationState = emptyState();
     const times: number[] = [];
 
     process.stdout.write(dim(`  ${model} `));
@@ -61,16 +61,16 @@ async function main() {
       for (const [ti, turn] of TURNS.entries()) {
         await pace(ti);
         const t = Date.now();
-        const r = await respond({ brain, company, history, collected, customerMessage: turn });
+        const r = await respond({ brain, company, history, state, customerMessage: turn });
         times.push(Date.now() - t);
-        collected = r.collected;
+        state = r.state;
         history.push({ role: "user", content: turn }, { role: "assistant", content: r.reply });
         process.stdout.write(".");
       }
-      results.push({ model, times, collected: progress(collected) });
+      results.push({ model, times, collected: progress(state.collected) });
       console.log(" done");
     } catch (error) {
-      results.push({ model, times, collected: progress(collected), error: (error as Error).message });
+      results.push({ model, times, collected: progress(state.collected), error: (error as Error).message });
       console.log(red(" failed"));
     }
   }

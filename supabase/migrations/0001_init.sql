@@ -126,7 +126,10 @@ create index if not exists messages_conversation_idx
   on messages (conversation_id, created_at);
 
 -- ─── leads ───────────────────────────────────────────────────
--- Written once all five details are present.
+-- Written once every REQUIRED detail is present. Surname and phone are
+-- deliberately nullable: chasing a surname annoys people, and a phone
+-- number is the lowest-value, highest-friction field to demand from a
+-- skincare customer, so it is asked once and never pushed.
 
 create table if not exists leads (
   id              uuid primary key default gen_random_uuid(),
@@ -134,10 +137,12 @@ create table if not exists leads (
   conversation_id uuid not null references conversations (id) on delete cascade,
   contact_id      uuid references contacts (id) on delete set null,
   first_name      text not null,
-  last_name       text not null,
+  last_name       text,
   email           text not null,
-  phone           text not null,
+  phone           text,
   description     text not null,
+  -- "first time" | "some experience" | "daily routine"
+  experience      text,
   notified_at     timestamptz,
   created_at      timestamptz not null default now()
 );

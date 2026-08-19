@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Brain, ChatMessage } from "../brain";
-import { FIELD_LABELS, type Collected, type Field } from "./checklist";
+import type { Collected } from "./checklist";
 
 /**
  * Field extraction.
@@ -26,6 +26,7 @@ const ExtractionSchema = z.object({
   email: z.string().nullable(),
   phone: z.string().nullable(),
   description: z.string().nullable(),
+  experience: z.string().nullable(),
 });
 
 function findEmail(text: string): string | undefined {
@@ -46,8 +47,9 @@ function findPhone(text: string): string | undefined {
 }
 
 export type ExtractOptions = {
-  /** The field the agent asked for on the previous turn, if any. */
-  asking: Field | null;
+  /** What the agent asked for last turn, phrased for the prompt. Lets a
+   *  bare reply like "Riti" be read as a name rather than as noise. */
+  askedFor: string | null;
   /** Already-known values, so the model doesn't echo them back. */
   alreadyHave: Collected;
 };
@@ -74,19 +76,22 @@ export async function extractFields(
   const system = `You extract contact details from ONE customer message.
 
 Return ONLY a JSON object with exactly these keys:
-{"firstName": null, "lastName": null, "email": null, "phone": null, "description": null}
+{"firstName": null, "lastName": null, "email": null, "phone": null,
+ "description": null, "experience": null}
 
 Rules:
 - Extract ONLY from the message given. Ignore anything you infer from elsewhere.
 - Use null for anything not clearly stated in that message. Never guess.
 - Only extract what the customer says about THEMSELVES.
-- "description" is a short phrase, under 15 words, for what they need help with.
-  If they state a new need, return the NEW one.
+- "description" is a short phrase, under 15 words, for their skin type or the
+  concern they need help with. If they state a new need, return the NEW one.
+- "experience" is their skincare experience level, ONLY if they indicate it.
+  Use one of exactly: "first time", "some experience", "daily routine".
 - A full name splits into firstName and lastName.
 - Never invent a placeholder like "John Doe" or "unknown".${
-    options.asking
-      ? `\n- The agent just asked for ${FIELD_LABELS[options.asking]}, so a bare
-  reply is most likely that.`
+    options.askedFor
+      ? `\n- The agent just asked for ${options.askedFor}, so a short or bare
+  reply is most likely answering that.`
       : ""
   }${
     known.length
@@ -110,6 +115,7 @@ Rules:
       if (d.firstName) found.firstName = d.firstName.trim();
       if (d.lastName) found.lastName = d.lastName.trim();
       if (d.description) found.description = d.description.trim();
+      if (d.experience) found.experience = d.experience.trim();
       // Regex wins on these two; only fall back to the model.
       if (!found.email && d.email && EMAIL_RE.test(d.email)) {
         found.email = d.email.trim().toLowerCase();
