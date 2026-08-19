@@ -1,5 +1,5 @@
 import { catalogueForPrompt, faqForPrompt, type Company } from "../company";
-import type { Ask, Collected } from "./checklist";
+import { askLabel, type Ask, type Collected } from "./checklist";
 
 export type PromptMode =
   /** Answer only. Used on the first reply, and after an unanswered ask. */
@@ -26,10 +26,15 @@ export function buildSystemPrompt(
 
   const directive =
     mode.kind === "ask"
-      ? `THIS TURN: answer whatever they said properly first. Then, in the same
-reply, ask for ${mode.ask.label} — giving the reason, which is ${mode.ask.reason}.
-Ask for this ONE thing and nothing else. Make it sound like a natural next
-step in the conversation, not a form field.`
+      ? `THIS TURN, in this order:
+1. ANSWER THEM PROPERLY FIRST. If they described their skin, give the actual
+   recommendation — name the specific products and say why each suits what they
+   described. If they asked a question, answer it. This is the part that earns
+   the conversation, and it is never optional. Do not skip it to get to the ask.
+2. Briefly acknowledge anything they just handed you.
+3. Only then ask for ${askLabel(mode.ask, collected)}, giving the reason, which
+   is ${mode.ask.reason}. Ask for that and nothing else, and make it sound like
+   a natural next step rather than a form field.`
       : mode.kind === "answer-only"
         ? `THIS TURN: ask for NOTHING. Do not request any personal detail, not even
 politely, and do not say you will need details later. Just be genuinely

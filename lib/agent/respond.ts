@@ -3,6 +3,7 @@ import type { Company } from "../company";
 import { extractFields } from "./extract";
 import { buildSystemPrompt, type PromptMode } from "./prompts";
 import {
+  engagedWith,
   findAsk,
   isLeadComplete,
   isAskSatisfied,
@@ -66,10 +67,17 @@ export async function respond(
   const openedWithNothing =
     history.length === 0 && !collected.description?.trim();
 
-  // Second: we asked last turn and they did not answer. Pushing again is
-  // badgering. Help instead, and try once more later.
+  // Second: we asked last turn and they did not answer at all. Pushing
+  // again is badgering — help instead and try once more later.
+  //
+  // Partly answering is NOT ignoring. Someone who gives their name but not
+  // their email is engaged, and going quiet on them is worse than asking:
+  // they are mid-handover and expect the next question. So we only back off
+  // when this turn supplied nothing from the ask at all.
   const ignoredLastAsk =
-    previousAsk !== null && !isAskSatisfied(previousAsk, collected);
+    previousAsk !== null &&
+    !isAskSatisfied(previousAsk, collected) &&
+    !engagedWith(previousAsk, learned);
 
   const ask =
     openedWithNothing || ignoredLastAsk
@@ -92,11 +100,13 @@ export async function respond(
     { role: "user", content: customerMessage },
   ];
 
-  // 160 tokens is roughly three or four sentences. Capping it enforces the
-  // brevity the prompt asks for, and generation time scales with length.
+  // Brevity is enforced by the prompt, not by this cap. The cap exists only
+  // as a backstop — set too low it truncates mid-sentence, which reads as a
+  // broken product, and that is far worse than a reply running one sentence
+  // long. Generation time does scale with length, so it stays modest.
   let reply = "";
   for await (const token of brain.stream(messages, {
-    maxTokens: 160,
+    maxTokens: 240,
     reasoningEffort: "low",
   })) {
     reply += token;

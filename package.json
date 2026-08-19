@@ -10,7 +10,8 @@
     "chat": "tsx scripts/chat.ts",
     "models": "tsx scripts/models.ts",
     "smoke": "tsx scripts/smoke.ts",
-    "bench": "tsx scripts/bench.ts"
+    "bench": "tsx scripts/bench.ts",
+    "partial": "tsx scripts/partial.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

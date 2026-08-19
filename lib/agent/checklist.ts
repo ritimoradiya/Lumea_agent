@@ -28,8 +28,15 @@ export type Ask = {
   fields: Field[];
   /** Fields that must be present before the ask counts as answered. */
   requires: Field[];
-  /** How the model is told to phrase it. */
+  /** How the model is told to phrase it when nothing is known yet. */
   label: string;
+  /**
+   * Per-field phrasing, used when an ask is only partly answered. Someone
+   * who gives their name but not their email must be asked for the email
+   * alone — re-requesting the name they just gave is the fastest way to
+   * look broken.
+   */
+  partialLabels?: Partial<Record<Field, string>>;
   /** Why we want it. Turns a form field into a reason to answer. */
   reason: string;
   /**
@@ -37,6 +44,8 @@ export type Ask = {
    * lead from being considered complete.
    */
   optional?: boolean;
+  /** Attempts before giving up. Defaults to MAX_ATTEMPTS. */
+  maxAttempts?: number;
 };
 
 /**
@@ -75,7 +84,14 @@ export const ASKS: Ask[] = [
     fields: ["firstName", "lastName", "email"],
     requires: ["firstName", "email"],
     label: "their name and email address",
+    partialLabels: {
+      firstName: "their name",
+      email: "their email address",
+    },
     reason: "so a specialist can send them a written routine they can keep",
+    // Email is the single most valuable detail here, so it gets one more
+    // attempt than everything else before we give up on it.
+    maxAttempts: 3,
   },
   {
     id: "phone",
@@ -117,6 +133,28 @@ export function findAsk(id: string | null): Ask | null {
   return id ? ASKS.find((a) => a.id === id) ?? null : null;
 }
 
+/**
+ * How to phrase an ask given what we already have. Falls back to the full
+ * label when nothing has been supplied yet.
+ */
+export function askLabel(ask: Ask, collected: Collected): string {
+  const missing = ask.requires.filter((f) => !collected[f]?.trim());
+
+  if (missing.length === 0 || missing.length === ask.requires.length) {
+    return ask.label;
+  }
+
+  return missing.map((f) => ask.partialLabels?.[f] ?? ask.label).join(" and ");
+}
+
+/** Did this turn supply any part of the ask we made last turn? */
+export function engagedWith(
+  ask: Ask | null,
+  learned: Collected
+): boolean {
+  return ask !== null && ask.fields.some((f) => learned[f]?.trim());
+}
+
 /** The next thing worth asking for, skipping anything already exhausted. */
 export function nextAsk(
   collected: Collected,
@@ -126,7 +164,8 @@ export function nextAsk(
     ASKS.find(
       (ask) =>
         !isAskSatisfied(ask, collected) &&
-        (attempts[ask.id] ?? 0) < (ask.optional ? 1 : MAX_ATTEMPTS)
+        (attempts[ask.id] ?? 0) <
+          (ask.optional ? 1 : ask.maxAttempts ?? MAX_ATTEMPTS)
     ) ?? null
   );
 }
