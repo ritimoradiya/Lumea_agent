@@ -48,8 +48,10 @@ export type Ask = {
  * Every ask carries a `reason`. "What's your email?" is a form; "so a
  * specialist can send you a written routine" is a service.
  *
- * `name` requires only firstName: if someone gives one name we take it and
- * move on. Chasing a surname is the badgering this exists to prevent.
+ * Name and email are ONE ask. They are both "how do I reach you", so
+ * splitting them costs an extra round trip for nothing. Surname is taken
+ * opportunistically and never chased — if someone gives one name, we keep
+ * it and move on.
  */
 export const ASKS: Ask[] = [
   {
@@ -69,18 +71,11 @@ export const ASKS: Ask[] = [
       "because a beginner should build up slowly while someone experienced can start on actives straight away",
   },
   {
-    id: "name",
-    fields: ["firstName", "lastName"],
-    requires: ["firstName"],
-    label: "their name",
-    reason: "so the colleague following up knows who they are speaking to",
-  },
-  {
-    id: "email",
-    fields: ["email"],
-    requires: ["email"],
-    label: "their email address",
-    reason: "so a specialist can send a written routine they can keep",
+    id: "contact",
+    fields: ["firstName", "lastName", "email"],
+    requires: ["firstName", "email"],
+    label: "their name and email address",
+    reason: "so a specialist can send them a written routine they can keep",
   },
   {
     id: "phone",
@@ -142,17 +137,20 @@ export function isLeadComplete(collected: Collected): boolean {
 }
 
 /**
- * Identity details are locked once known — a later guess must never
- * overwrite a confirmed email or phone number.
+ * Every field is first-write-wins.
+ *
+ * Identity details obviously must never be overwritten by a later guess.
+ * The description was mutable at first, on the theory that someone might
+ * change what they need mid-conversation. In practice that let ordinary
+ * follow-up questions clobber it: asking "can I use retinol while
+ * pregnant?" three turns in rewrote a customer whose actual concern was
+ * dry skin into "pregnant, asks about retinol safety".
+ *
+ * People state their need in their opening message. Later messages are
+ * questions about it, not replacements for it. If someone genuinely
+ * changes direction, the colleague following up has the full transcript.
  */
-const LOCKED_FIELDS: Field[] = ["firstName", "lastName", "email", "phone"];
-
-/**
- * These are expected to evolve. Someone who opens with "something for
- * sensitive skin" and later says "actually I need a dry skin routine"
- * should end up with the second one on their lead.
- */
-const MUTABLE_FIELDS: Field[] = ["description", "experience"];
+const LOCKED_FIELDS: Field[] = [...FIELDS];
 
 export function merge(current: Collected, incoming: Collected): Collected {
   const next: Collected = { ...current };
@@ -161,9 +159,7 @@ export function merge(current: Collected, incoming: Collected): Collected {
     const value = incoming[field]?.trim();
     if (!value) continue;
 
-    if (MUTABLE_FIELDS.includes(field)) {
-      next[field] = value;
-    } else if (LOCKED_FIELDS.includes(field) && !next[field]?.trim()) {
+    if (LOCKED_FIELDS.includes(field) && !next[field]?.trim()) {
       next[field] = value;
     }
   }

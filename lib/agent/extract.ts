@@ -84,7 +84,9 @@ Rules:
 - Use null for anything not clearly stated in that message. Never guess.
 - Only extract what the customer says about THEMSELVES.
 - "description" is a short phrase, under 15 words, for their skin type or the
-  concern they need help with. If they state a new need, return the NEW one.
+  concern they need help with. Return it ONLY when they are describing their
+  own skin or what they want help with. A passing question about a product,
+  a price, shipping, or safety is NOT a description — return null for those.
 - "experience" is their skincare experience level, ONLY if they indicate it.
   Use one of exactly: "first time", "some experience", "daily routine".
 - A full name splits into firstName and lastName.

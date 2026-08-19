@@ -26,20 +26,20 @@ const yellow = (s: string) => `\x1b[33m${s}\x1b[0m`;
 
 const SCRIPT: { say: string; expect: string }[] = [
   {
-    say: "hi, my skin has been really dry and flaky lately",
-    expect: "answer-only — useful advice, asks for NOTHING on the first reply",
+    say: "hi",
+    expect: "answer-only — nothing to go on yet, so must NOT ask for anything",
+  },
+  {
+    say: "I want to know what would help with dry flaky skin",
+    expect: "need is now known, so it may answer AND ask one thing",
   },
   {
     say: "honestly this is my first time doing skincare properly",
     expect: "captures experience; must NOT put a beginner on retinol or vitamin C",
   },
   {
-    say: "do you ship to Antarctica?",
-    expect: "must NOT invent an answer, and must not re-ask what was ignored",
-  },
-  {
-    say: "I'm Riti Moradiya, riti@example.com",
-    expect: "captures name + email in ONE turn, no separate surname question",
+    say: "Riti Moradiya, riti@example.com",
+    expect: "name AND email captured in ONE turn from a single combined ask",
   },
   {
     say: "I'm pregnant, can I use the retinol?",

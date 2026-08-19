@@ -56,17 +56,25 @@ export async function respond(
   });
   const collected = merge(state.collected, learned);
 
-  // Three reasons to ask for nothing this turn:
-  //   1. It is our first reply — be useful before asking for anything.
-  //   2. We asked last turn and they did not answer. Pushing again is
-  //      badgering; help instead and try once more later.
-  //   3. There is nothing left worth asking for.
-  const isFirstReply = history.length === 0;
+  // Two reasons to ask for nothing this turn.
+  //
+  // First: they opened with nothing to go on. Someone who says only "hi"
+  // should be greeted and helped, not asked for an email address. But if
+  // their opening message already told us what they need, we have earned
+  // enough to ask one thing straight away — waiting a turn just to seem
+  // polite wastes their time.
+  const openedWithNothing =
+    history.length === 0 && !collected.description?.trim();
+
+  // Second: we asked last turn and they did not answer. Pushing again is
+  // badgering. Help instead, and try once more later.
   const ignoredLastAsk =
     previousAsk !== null && !isAskSatisfied(previousAsk, collected);
 
   const ask =
-    isFirstReply || ignoredLastAsk ? null : nextAsk(collected, state.attempts);
+    openedWithNothing || ignoredLastAsk
+      ? null
+      : nextAsk(collected, state.attempts);
 
   const mode: PromptMode =
     ask !== null
