@@ -10,6 +10,7 @@ import { verifyMailer } from "../lib/email";
 import { db } from "../lib/db";
 import { getCompany } from "../lib/company";
 import { getBrain } from "../lib/brain";
+import { getMe } from "../lib/channels/telegram";
 
 const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
 const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
@@ -55,6 +56,10 @@ async function main() {
     await check("gmail smtp", async () => {
       await verifyMailer();
       return process.env.GMAIL_ADDRESS ?? "";
+    }),
+    await check("telegram bot", async () => {
+      const me = await getMe();
+      return `@${me.username}`;
     }),
   ];
 

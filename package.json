@@ -14,12 +14,16 @@
     "partial": "tsx scripts/partial.ts",
     "verify": "tsx scripts/verify.ts",
     "e2e": "tsx scripts/e2e.ts",
-    "replay": "tsx scripts/replay.ts"
+    "replay": "tsx scripts/replay.ts",
+    "telegram": "tsx scripts/telegram.ts",
+    "email": "tsx scripts/email.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
     "dotenv": "^17.4.2",
     "groq-sdk": "^1.5.0",
+    "imapflow": "^1.7.1",
+    "mailparser": "^3.9.15",
     "next": "16.3.1",
     "nodemailer": "^9.0.5",
     "react": "19.2.8",
@@ -28,6 +32,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/mailparser": "^3.4.6",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
