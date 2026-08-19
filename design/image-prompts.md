@@ -1,113 +1,220 @@
-# Image generation prompts
+# Image prompts
 
-Two shoots, two different style suffixes. Keeping each shoot internally
-consistent matters far more than any single image being perfect — a set that
+Every prompt below is complete — copy one, paste it, generate. Nothing to
+assemble.
+
+The style wording is near-identical across each group on purpose. A set that
 looks like one photographer beats a set of individually nicer but mismatched
-images.
+images, and mismatched lighting is the first thing that makes generated
+imagery look generated.
 
 Free tools with usable quality: Bing Image Creator, Ideogram, Leonardo.
+Generate three of each and keep the best; the hit rate is roughly one in three.
 
 ---
 
-## Shoot 1 — Products
+## Products
 
-Append to **every** product prompt:
+Save each as `public/products/<id>.jpg`. The site uses a photo the moment one
+exists and falls back to the drawn version otherwise, so add them one at a
+time.
 
+### dissolve-balm
 ```
-minimal editorial product photography, warm off-white seamless backdrop,
-soft diffused daylight from the left, gentle shadow beneath, matte black cap,
-blank cream paper label with no text, centred, medium format, 4:5
-```
-
-Say **"blank label, no text"** — image models produce garbled lettering
-otherwise, and a blank label reads as deliberate.
-
-| Save as | Prompt |
-| --- | --- |
-| `dissolve-balm` | squat wide glass jar of deep amber cleansing balm, matte black screw lid, 90ml |
-| `clarity-cleanser` | tall olive-green glass pump bottle, black pump head, clear gel visible, 150ml |
-| `dawn-vitamin-c` | small amber glass dropper bottle, black pipette cap, 30ml serum |
-| `even-niacinamide` | small taupe-grey glass dropper bottle, black pipette cap, 30ml |
-| `smooth-pha` | tall slate-green glass bottle, black cap, clear liquid toner, 150ml |
-| `renew-retinol` | small dark amber glass dropper bottle, light-protective glass, black cap, 30ml |
-| `quench-serum` | small smoke-blue glass dropper bottle, black pipette cap, 30ml |
-| `shield-cream` | sage-green glass jar of thick white cream, matte black lid, 50ml |
-| `recover-night` | near-black glass jar of rich cream, matte black lid, 50ml |
-| `bright-eye` | very small pale bronze aluminium tube, black flip cap, 15ml |
-| `daylight-spf` | frosted cream-white squeeze tube, black flip cap, 50ml sunscreen |
-| `veil-tinted-spf` | soft beige squeeze tube, black flip cap, 40ml tinted sunscreen |
-
-Save to `public/products/<id>.jpg`. The renderer picks a photo up
-automatically and falls back to the drawing when one is absent, so they can be
-added one at a time.
-
----
-
-## Shoot 2 — Texture and atmosphere
-
-Append to **every** prompt below:
-
-```
-editorial beauty photography, warm neutral palette, soft natural daylight,
-shallow depth of field, no text, no logos, no packaging
+A squat wide glass jar of deep amber cleansing balm with a matte black screw lid, 90ml, standing on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
 ```
 
-### Texture macros — for the "How they feel" section
-
+### clarity-cleanser
 ```
-a smear of thick white cream on warm off-white stone, macro, soft daylight
-a single drop of golden serum on a pale surface, extreme macro, soft focus
-clear gel spread thin on frosted glass, tiny bubbles, macro, cool light
-a bead of amber facial oil catching light, extreme macro, dark background
-a swipe of mineral sunscreen on smooth grey stone, matte finish, macro
-water droplets scattered on brushed steel, macro, cold morning light
-thick cream peaked with a spatula, side lighting, macro, warm shadow
-a serum drop mid-fall from a glass pipette, frozen motion, macro
+A tall olive-green glass pump bottle with a matte black pump head, clear gel visible through the glass, 150ml, standing on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
 ```
 
-### Ingredient close-ups — for an ingredients section
-
+### dawn-vitamin-c
 ```
-raw shea butter chunks on pale linen, macro, natural light
-a single vitamin C crystal formation, extreme macro, clinical white
-green tea leaves scattered on warm concrete, overhead, soft shadow
-zinc oxide powder in a small glass dish, macro, cool daylight
-oat kernels spilling from a paper sachet, macro, warm light
-a glass beaker of clear liquid on a laboratory bench, soft daylight, minimal
+A small amber glass dropper bottle with a matte black pipette cap, 30ml serum, standing on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
 ```
 
-### Skin — for the routine and hero sections
-
-Generate these across **several skin tones**, not one. A skincare brand that
-only shows one kind of skin looks like it was made carelessly.
-
+### even-niacinamide
 ```
-close-up of a cheek with healthy glow, no makeup, soft daylight, macro
-fingertips smoothing cream onto a jawline, natural skin texture, soft light
-a face turned to the light, eyes closed, calm, natural skin, editorial
-close-up of hands warming product between fingertips, soft daylight
-bare shoulder and neck, natural skin texture, morning light, minimal
+A small taupe-grey glass dropper bottle with a matte black pipette cap, 30ml serum, standing on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
 ```
 
-### Still life — for hero and section backgrounds
-
+### smooth-pha
 ```
-three unlabelled amber glass bottles grouped on a steel counter, soft daylight
-a bathroom shelf in morning light, two bottles, a folded towel, minimal
-an empty warm stone surface with soft window light, negative space, 16:9
-a linen cloth draped beside a glass dropper, overhead, warm neutral tones
-a single glass bottle casting a long shadow on cream plaster, low sun
+A tall slate-green glass bottle with a matte black cap, clear liquid toner inside, 150ml, standing on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
+```
+
+### renew-retinol
+```
+A small dark amber light-protective glass dropper bottle with a matte black pipette cap, 30ml, standing on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
+```
+
+### quench-serum
+```
+A small smoke-blue glass dropper bottle with a matte black pipette cap, 30ml serum, standing on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
+```
+
+### shield-cream
+```
+A sage-green glass jar filled with thick white cream, matte black lid resting beside it, 50ml, on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
+```
+
+### recover-night
+```
+A near-black glass jar of rich cream with a matte black lid, 50ml, standing on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
+```
+
+### bright-eye
+```
+A very small pale bronze aluminium tube with a matte black flip cap, 15ml eye cream, standing upright on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
+```
+
+### daylight-spf
+```
+A frosted cream-white squeeze tube with a matte black flip cap, 50ml mineral sunscreen, standing upright on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
+```
+
+### veil-tinted-spf
+```
+A soft beige squeeze tube with a matte black flip cap, 40ml tinted sunscreen, standing upright on a warm off-white seamless backdrop, soft diffused daylight from the left, gentle shadow beneath, blank cream paper label with no text, centred, minimal editorial product photography, medium format, 4:5
 ```
 
 ---
 
-## Practical notes
+## Texture macros
 
-- **Aspect ratios.** Products 4:5. Texture macros square or 4:5. Backgrounds
-  16:9.
-- **Generate three of each** and keep the best. Hit rate is roughly one in
-  three.
-- **Reject anything with visible text.** Generated lettering is always subtly
-  wrong and it is the first thing that gives an image away.
-- **Watch consistency of light direction.** A set lit from the left throughout
-  looks like a shoot; mixed directions looks like a search results page.
+For the "How they feel" section. Save to `public/textures/`.
+
+### cream
+```
+A smear of thick white cream across warm off-white stone, peaks and ridges catching the light, extreme macro, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial beauty photography, no text, no packaging, square
+```
+
+### oil
+```
+A single bead of golden facial oil resting on pale stone, catching a bright highlight, extreme macro, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial beauty photography, no text, no packaging, square
+```
+
+### gel
+```
+Clear gel spread thin across frosted glass with tiny suspended bubbles, extreme macro, soft cool daylight from the left, shallow depth of field, neutral palette, editorial beauty photography, no text, no packaging, square
+```
+
+### water
+```
+Fine water droplets scattered across brushed steel, sharp reflections, extreme macro, cold morning daylight from the left, shallow depth of field, neutral palette, editorial beauty photography, no text, no packaging, square
+```
+
+### serum-drop
+```
+A drop of amber serum falling from a glass pipette, frozen mid-air, extreme macro, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial beauty photography, no text, no packaging, square
+```
+
+### sunscreen-swipe
+```
+A swipe of white mineral sunscreen across smooth grey stone with a matte finish, extreme macro, soft natural daylight from the left, shallow depth of field, neutral palette, editorial beauty photography, no text, no packaging, square
+```
+
+---
+
+## Ingredients
+
+For an ingredients section. Save to `public/ingredients/`.
+
+### ceramides
+```
+Raw shea butter chunks scattered on pale linen, extreme macro, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial beauty photography, no text, square
+```
+
+### vitamin-c
+```
+Fine white vitamin C crystals in a small clear glass dish, extreme macro, soft cool daylight from the left, shallow depth of field, clinical white palette, editorial beauty photography, no text, square
+```
+
+### zinc-oxide
+```
+Fine white zinc oxide powder mounded in a small glass dish, extreme macro, soft cool daylight from the left, shallow depth of field, neutral white palette, editorial beauty photography, no text, square
+```
+
+### niacinamide
+```
+A clear glass beaker of colourless liquid on a pale laboratory bench, minimal, soft daylight from the left, shallow depth of field, clinical neutral palette, editorial photography, no text, square
+```
+
+### botanicals
+```
+Loose green tea leaves scattered across warm grey concrete, overhead view, soft natural daylight from the left, shallow depth of field, muted palette, editorial beauty photography, no text, square
+```
+
+---
+
+## Skin
+
+For the routine and hero sections. Save to `public/skin/`.
+
+**Generate each of these across several skin tones — deep, medium and fair.**
+A skincare brand showing one kind of skin looks careless, and it is the sort of
+thing an interviewer notices.
+
+### glow
+```
+Extreme close-up of a cheek with healthy natural glow, no makeup, visible skin texture and fine pores, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial beauty photography, no text, 4:5
+```
+
+### applying
+```
+Fingertips smoothing a small amount of white cream along a jawline, natural skin texture, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial beauty photography, no text, 4:5
+```
+
+### calm
+```
+A face turned toward the window with eyes closed, calm expression, bare natural skin, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial beauty photography, no text, 4:5
+```
+
+### hands
+```
+Two hands warming a drop of serum between the fingertips, natural skin texture, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial beauty photography, no text, square
+```
+
+---
+
+## Still life and backgrounds
+
+For the hero and section backgrounds. Save to `public/scenes/`.
+
+### shelf
+```
+A bathroom shelf in early morning light holding two unlabelled amber glass bottles and a folded linen towel, minimal, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial photography, no text, 16:9
+```
+
+### grouped
+```
+Three unlabelled amber glass bottles of varying heights grouped on a brushed steel counter, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial product photography, no text, 16:9
+```
+
+### empty-surface
+```
+An empty warm stone surface lit by soft window light with generous negative space on the right, minimal, shallow depth of field, warm neutral palette, editorial photography, no text, 16:9
+```
+
+### long-shadow
+```
+A single unlabelled glass bottle casting a long soft shadow across cream plaster in low afternoon sun, minimal, warm neutral palette, editorial photography, no text, 16:9
+```
+
+### linen
+```
+A crumpled linen cloth beside a glass pipette on warm stone, overhead view, soft natural daylight from the left, shallow depth of field, warm neutral palette, editorial photography, no text, square
+```
+
+---
+
+## What to reject
+
+**Anything with visible lettering.** Generated text is always subtly wrong and
+it is the single biggest tell. Every prompt above says "no text" for this
+reason.
+
+**Anything lit from the wrong side.** Every prompt says "from the left". A set
+with consistent light direction reads as one shoot; mixed directions reads as a
+page of search results, however good each individual image is.
