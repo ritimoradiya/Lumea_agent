@@ -1,6 +1,7 @@
 import Link from "next/link";
 import LiquidHero from "@/components/LiquidHero";
 import ChatWidget from "@/components/ChatWidget";
+import OpenChatButton from "@/components/OpenChatButton";
 import ProductImage from "@/components/ProductImage";
 import { getCompany, type Product } from "@/lib/company";
 
@@ -45,6 +46,7 @@ export default async function Home() {
           <a href="#routine">Routines</a>
           <a href="#claims">Ingredients</a>
           <a href="#faq">FAQ</a>
+          <a href="#contact">Contact</a>
         </div>
       </nav>
 
@@ -245,7 +247,55 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="relative z-10 border-t hairline bg-paper-2 px-6 py-14 sm:px-12">
+
+      {/* ── contact ────────────────────────────────────────────── */}
+      <section
+        id="contact"
+        className="relative z-10 border-t hairline bg-paper-2 px-6 py-24 sm:px-12"
+      >
+        <div className="mx-auto max-w-[1180px]">
+          <h2 className="font-serif text-[38px] tracking-[-0.02em]">
+            Reach us
+          </h2>
+          <p className="mt-3 max-w-[460px] text-[15px] leading-relaxed text-muted">
+            However you get in touch, the same assistant answers first and a
+            colleague picks it up from there.
+          </p>
+
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-[14px] border hairline bg-white/50 p-6">
+              <h3 className="font-serif text-[19px]">Chat</h3>
+              <p className="mt-2.5 text-[13.5px] leading-[1.6] text-muted">
+                Fastest. Answers in about a second, any hour.
+              </p>
+              <OpenChatButton />
+            </div>
+
+            <div className="rounded-[14px] border hairline bg-white/50 p-6">
+              <h3 className="font-serif text-[19px]">Email</h3>
+              <p className="mt-2.5 text-[13.5px] leading-[1.6] text-muted">
+                Best for anything detailed, or if you would rather write.
+              </p>
+              <a
+                href="mailto:lumea.support01@gmail.com"
+                className="mt-5 inline-block text-[13.5px] underline decoration-black/20 underline-offset-4 hover:decoration-black/50"
+              >
+                lumea.support01@gmail.com
+              </a>
+            </div>
+
+            <div className="rounded-[14px] border hairline bg-white/50 p-6">
+              <h3 className="font-serif text-[19px]">Hours</h3>
+              <p className="mt-2.5 text-[13.5px] leading-[1.6] text-muted">
+                {company.supportHours}. The assistant answers outside them too;
+                a person replies the next working day.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="relative z-10 border-t hairline bg-paper px-6 py-14 sm:px-12">
         <div className="mx-auto flex max-w-[1180px] flex-wrap items-baseline justify-between gap-6">
           <span className="text-[17px] font-medium tracking-[0.16em]">LUMEA</span>
           <span className="text-[12.5px] text-faint">

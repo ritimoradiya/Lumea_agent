@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ASK_EVENT } from "./AskAboutButton";
 
 type Message = { role: "bot" | "me"; text: string };
 
@@ -43,6 +44,19 @@ export default function ChatWidget() {
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
+
+  // "Ask about this" on a product page opens the widget with a draft ready,
+  // so the customer only has to press send.
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      const detail = (e as CustomEvent<{ text: string }>).detail;
+      setOpen(true);
+      setDraft(detail.text);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    };
+    window.addEventListener(ASK_EVENT, onAsk);
+    return () => window.removeEventListener(ASK_EVENT, onAsk);
+  }, []);
 
   useEffect(() => {
     bodyRef.current?.scrollTo({
