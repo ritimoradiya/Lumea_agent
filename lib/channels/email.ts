@@ -100,6 +100,32 @@ export async function fetchUnread(limit = 10): Promise<InboundEmail[]> {
       const from = parsed.from?.value?.[0];
       if (!from?.address) continue;
 
+      /**
+       * Never process mail from our own address.
+       *
+       * Without this the agent can answer itself: a reply that lands back in
+       * the inbox unread gets treated as a customer message, answered, and
+       * that answer arrives too — a loop that would spend the entire token
+       * budget and fill the customer's inbox. Real data already showed the
+       * company's own address recorded as a customer's.
+       */
+      if (from.address.toLowerCase() === user.toLowerCase()) {
+        await client.messageFlagsAdd(String(id), ["\\Seen"]);
+        continue;
+      }
+
+      // Bulk and automated mail — Google notifications, newsletters — is not a
+      // customer writing in, and answering it is pure waste.
+      const headers = parsed.headers;
+      if (
+        headers.get("list-unsubscribe") ||
+        headers.get("auto-submitted") ||
+        String(headers.get("precedence") ?? "").toLowerCase() === "bulk"
+      ) {
+        await client.messageFlagsAdd(String(id), ["\\Seen"]);
+        continue;
+      }
+
       const text = stripQuoted(parsed.text ?? "");
       if (!text) continue;
 

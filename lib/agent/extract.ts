@@ -33,10 +33,26 @@ function findEmail(text: string): string | undefined {
   return text.match(EMAIL_RE)?.[0]?.toLowerCase();
 }
 
+/**
+ * Whether something is plausibly a phone number.
+ *
+ * Digit count alone was not enough: a millisecond timestamp from an email
+ * header is thirteen digits and was duly stored as a customer's phone number.
+ * A real number is either internationally prefixed, or grouped with spaces,
+ * dashes or brackets, or a bare national number of ten or eleven digits. A
+ * long unbroken run of digits with none of those is almost never a phone
+ * number.
+ */
 function isPlausiblePhone(value: string): boolean {
   const digits = value.replace(/\D/g, "");
-  // Real phone numbers land in this range; order numbers and years don't.
-  return digits.length >= 8 && digits.length <= 15;
+  if (digits.length < 8 || digits.length > 15) return false;
+
+  const hasCountryCode = /^\s*\+/.test(value);
+  const isGrouped = /[\s().-]/.test(value.trim());
+
+  if (hasCountryCode || isGrouped) return true;
+  // Bare digits: only accept lengths people actually write unbroken.
+  return digits.length === 10 || digits.length === 11;
 }
 
 function findPhone(text: string): string | undefined {
