@@ -99,7 +99,13 @@ create table if not exists conversations (
   channel           channel_type not null,
   channel_thread_id text not null,
   status            conversation_status not null default 'active',
+  -- The checklist state. Owned by application code, not the model:
+  -- `collected` is what we know, `attempts` is how many times each ask has
+  -- been made, and `last_ask_id` is what we asked on the previous turn so a
+  -- bare reply can be interpreted correctly after a restart.
   collected         jsonb not null default '{}'::jsonb,
+  attempts          jsonb not null default '{}'::jsonb,
+  last_ask_id       text,
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now()
 );

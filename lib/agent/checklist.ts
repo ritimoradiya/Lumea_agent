@@ -88,7 +88,8 @@ export const ASKS: Ask[] = [
       firstName: "their name",
       email: "their email address",
     },
-    reason: "so a specialist can send them a written routine they can keep",
+    reason:
+      "so we can email them a written routine to keep - do NOT say a specialist or a person writes it, because it is generated automatically",
     // Email is the single most valuable detail here, so it gets one more
     // attempt than everything else before we give up on it.
     maxAttempts: 3,
