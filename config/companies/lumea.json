@@ -3,7 +3,7 @@
   "name": "Lumea",
   "industry": "Skincare / DTC e-commerce",
   "tagline": "Clinical care, quietly done.",
-  "about": "Lumea is a small-batch skincare label making fragrance-free, dermatologist-tested essentials. Six products, no filler, no upsell. Everything is vegan and cruelty-free, formulated in Copenhagen.",
+  "about": "Lumea is a small-batch skincare label making fragrance-free, dermatologist-tested essentials. Twelve products, no filler, no upsell. Everything is vegan and cruelty-free, formulated in Copenhagen.",
   "supportHours": "Monday to Friday, 9am-6pm CET",
   "greeting": "Hi \u2014 I'm Lumea's assistant. What's been bothering your skin lately?",
   "extraRules": [
@@ -11,76 +11,172 @@
   ],
   "products": [
     {
+      "id": "dissolve-balm",
+      "name": "Dissolve Cleansing Balm",
+      "category": "Cleanse",
+      "price": "$30",
+      "summary": "An oil balm that melts sunscreen and makeup before your main cleanse.",
+      "details": {
+        "Size": "90ml",
+        "Key ingredients": "Sunflower seed oil, Squalane, Vitamin E",
+        "Good for": "Removing SPF and makeup, first step of a double cleanse",
+        "How to use": "Massage onto dry skin, add water to emulsify, rinse, then follow with Clarity."
+      },
+      "notes": "Only needed at night, and only if you wear sunscreen or makeup."
+    },
+    {
       "id": "clarity-cleanser",
       "name": "Clarity Gel Cleanser",
+      "category": "Cleanse",
       "price": "$24",
-      "summary": "A low-foaming gel cleanser that removes sunscreen and grime without stripping.",
+      "summary": "A low-foaming gel cleanser that removes grime without stripping.",
       "details": {
         "Size": "150ml",
         "Key ingredients": "Coco-glucoside, Glycerin, Allantoin",
-        "Good for": "All skin types, daily use morning and night"
+        "Good for": "All skin types, twice daily",
+        "How to use": "Massage into damp skin for 30 seconds, rinse with lukewarm water."
       },
-      "notes": "pH 5.5. Safe to use twice daily, including on sensitive skin."
-    },
-    {
-      "id": "quench-serum",
-      "name": "Quench Hydrating Serum",
-      "price": "$38",
-      "summary": "A lightweight humectant serum that holds water in the upper layers of the skin.",
-      "details": {
-        "Size": "30ml",
-        "Key ingredients": "Hyaluronic acid (3 weights), Panthenol, Glycerin",
-        "Good for": "Dehydrated skin, layering under moisturiser"
-      },
-      "notes": "Apply to slightly damp skin, then seal with a moisturiser."
+      "notes": "pH 5.5. Safe twice daily, including on sensitive skin."
     },
     {
       "id": "dawn-vitamin-c",
       "name": "Dawn Vitamin C Serum",
+      "category": "Treat",
       "price": "$48",
       "summary": "A stabilised vitamin C serum for uneven tone and post-blemish marks.",
       "details": {
         "Size": "30ml",
         "Key ingredients": "15% THD ascorbate, Vitamin E, Ferulic acid",
-        "Good for": "Dullness, uneven tone, morning routines"
+        "Good for": "Dullness, uneven tone, mornings",
+        "How to use": "Four drops to clean dry skin before moisturiser."
       },
       "notes": "Use in the morning. Do not layer in the same routine as Renew Retinol - alternate morning and night instead."
     },
     {
+      "id": "even-niacinamide",
+      "name": "Even Niacinamide Serum",
+      "category": "Treat",
+      "price": "$34",
+      "summary": "A 10% niacinamide serum for visible pores, oiliness, and blotchy tone.",
+      "details": {
+        "Size": "30ml",
+        "Key ingredients": "Niacinamide 10%, Zinc PCA, Panthenol",
+        "Good for": "Congestion, visible pores, oily or combination skin",
+        "How to use": "Two drops morning or night, before moisturiser."
+      },
+      "notes": "Pairs safely with everything else in the range, including retinol."
+    },
+    {
+      "id": "smooth-pha",
+      "name": "Smooth PHA Exfoliating Toner",
+      "category": "Treat",
+      "price": "$36",
+      "summary": "A gentle PHA exfoliant for texture, sized for skin that cannot tolerate acids.",
+      "details": {
+        "Size": "150ml",
+        "Key ingredients": "Gluconolactone 8%, Glycerin, Panthenol",
+        "Good for": "Rough texture, sensitive skin that reacts to AHAs",
+        "How to use": "Sweep over clean dry skin at night. Do not use on the same night as Renew Retinol."
+      },
+      "notes": "PHAs have a larger molecule than AHAs, so they work more slowly and sting far less. Start twice weekly."
+    },
+    {
+      "id": "renew-retinol",
+      "name": "Renew Retinol Night Treatment",
+      "category": "Treat",
+      "price": "$54",
+      "summary": "An encapsulated retinol for texture and fine lines, released slowly overnight.",
+      "details": {
+        "Size": "30ml",
+        "Key ingredients": "0.3% encapsulated retinol, Bisabolol, Squalane",
+        "Good for": "Texture, fine lines, night use only",
+        "How to use": "A pea-sized amount at night, after cleansing, before moisturiser."
+      },
+      "notes": "Start twice weekly and build up. Always pair with daily sunscreen. Not suitable during pregnancy or breastfeeding."
+    },
+    {
+      "id": "quench-serum",
+      "name": "Quench Hydrating Serum",
+      "category": "Hydrate",
+      "price": "$38",
+      "summary": "A lightweight humectant serum that holds water in the upper layers of the skin.",
+      "details": {
+        "Size": "30ml",
+        "Key ingredients": "Hyaluronic acid (3 weights), Panthenol, Glycerin",
+        "Good for": "Dehydrated skin, layering under moisturiser",
+        "How to use": "Three drops to damp skin, then follow immediately with a cream."
+      },
+      "notes": "Apply to slightly damp skin, then seal with a moisturiser."
+    },
+    {
       "id": "shield-cream",
       "name": "Shield Barrier Cream",
+      "category": "Hydrate",
       "price": "$42",
       "summary": "A ceramide moisturiser for compromised or over-exfoliated skin barriers.",
       "details": {
         "Size": "50ml",
         "Key ingredients": "Ceramide NP, Niacinamide 4%, Squalane",
-        "Good for": "Dry skin, sensitised skin, winter"
+        "Good for": "Dry skin, sensitised skin, winter",
+        "How to use": "Morning and night, as the last step before sunscreen."
       },
       "notes": "Fragrance-free and non-comedogenic."
     },
     {
+      "id": "recover-night",
+      "name": "Recover Night Cream",
+      "category": "Hydrate",
+      "price": "$46",
+      "summary": "A richer overnight cream for skin that still feels tight by morning.",
+      "details": {
+        "Size": "50ml",
+        "Key ingredients": "Shea butter, Ceramide AP, Bakuchiol",
+        "Good for": "Very dry skin, overnight repair, colder months",
+        "How to use": "A thick layer at night, as your final step."
+      },
+      "notes": "Heavier than Shield. Most people want one or the other, not both."
+    },
+    {
+      "id": "bright-eye",
+      "name": "Bright Eye Cream",
+      "category": "Hydrate",
+      "price": "$38",
+      "summary": "A light eye cream for dryness and crepiness around the orbital bone.",
+      "details": {
+        "Size": "15ml",
+        "Key ingredients": "Caffeine, Peptide complex, Squalane",
+        "Good for": "Dry under-eyes, fine lines",
+        "How to use": "Tap a rice-grain amount around the orbital bone, morning and night."
+      },
+      "notes": "Will not remove dark circles caused by pigment or genetics - we would rather say so."
+    },
+    {
       "id": "daylight-spf",
       "name": "Daylight Mineral SPF 50",
+      "category": "Protect",
       "price": "$32",
       "summary": "A mineral sunscreen with a sheer finish and no chemical filters.",
       "details": {
         "Size": "50ml",
         "Key ingredients": "Zinc oxide 22%, Squalane",
-        "Good for": "Daily protection, sensitive and reactive skin"
+        "Good for": "Daily protection, sensitive and reactive skin",
+        "How to use": "A generous layer as the final morning step, every day."
       },
-      "notes": "Leaves a very slight cast on deeper skin tones. Reapply every two hours of direct sun exposure."
+      "notes": "Leaves a very slight cast on deeper skin tones. Reapply every two hours of direct sun."
     },
     {
-      "id": "renew-retinol",
-      "name": "Renew Retinol Night Treatment",
-      "price": "$54",
-      "summary": "An encapsulated retinol treatment for texture and fine lines, released slowly overnight.",
+      "id": "veil-tinted-spf",
+      "name": "Veil Tinted SPF 30",
+      "category": "Protect",
+      "price": "$34",
+      "summary": "A lightly tinted mineral SPF for days you want a little evening out.",
       "details": {
-        "Size": "30ml",
-        "Key ingredients": "0.3% encapsulated retinol, Bisabolol, Squalane",
-        "Good for": "Texture, fine lines, night use only"
+        "Size": "40ml",
+        "Key ingredients": "Zinc oxide 14%, Iron oxides, Squalane",
+        "Good for": "Light coverage, no white cast",
+        "How to use": "Smooth over the face as the final morning step."
       },
-      "notes": "Start twice weekly and build up. Always pair with daily sunscreen. Not suitable during pregnancy or breastfeeding."
+      "notes": "Three shades. SPF 30 rather than 50 - if you are in strong sun, reach for Daylight instead."
     }
   ],
   "faqs": [
@@ -123,6 +219,18 @@
     {
       "q": "Where are the products made?",
       "a": "Formulated and filled in Copenhagen, Denmark."
+    },
+    {
+      "q": "Do I need both Shield and Recover?",
+      "a": "Almost certainly not. Shield is the everyday barrier cream; Recover is heavier, for very dry skin or winter. Most people pick one."
+    },
+    {
+      "q": "PHA or retinol for texture?",
+      "a": "If your skin is reactive, start with Smooth PHA - the molecule is larger than an AHA so it works more gently. Retinol does more over time but needs building up. Never both on the same night."
+    },
+    {
+      "q": "Which sunscreen should I choose?",
+      "a": "Daylight SPF 50 for real sun exposure. Veil Tinted SPF 30 for everyday city wear when you want light coverage and no white cast."
     }
   ]
 }

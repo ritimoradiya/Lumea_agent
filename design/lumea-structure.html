@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Lumea — structure & admin</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:#e8e8ed;padding:40px 24px;color:#26241f}
+  .lab{max-width:1180px;margin:0 auto 14px;display:flex;align-items:baseline;gap:14px}
+  .lab h2{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .lab span{font-size:13px;color:#86868b}
+  .frame{max-width:1180px;margin:0 auto 56px;border-radius:16px;overflow:hidden;background:#faf8f5;
+    box-shadow:0 20px 60px rgba(0,0,0,.14),0 2px 6px rgba(0,0,0,.06)}
+
+  /* ── sitemap ── */
+  .map{padding:38px 44px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:34px}
+  .col h3{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:#a29a8e;margin-bottom:15px}
+  .route{background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:10px;padding:12px 14px;margin-bottom:9px}
+  .route code{font-family:"SF Mono",ui-monospace,monospace;font-size:12.5px;color:#26241f;font-weight:500}
+  .route p{font-size:12px;color:#7d766c;margin-top:4px;line-height:1.45}
+  .route.lock{border-color:rgba(138,154,123,.4);background:rgba(138,154,123,.07)}
+  .route.api{background:#f1ece4;border-color:rgba(0,0,0,.05)}
+
+  /* ── admin chrome ── */
+  .abar{padding:15px 22px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;gap:22px}
+  .abar .brand{font-size:14px;letter-spacing:.13em;font-weight:500}
+  .abar .tabs{display:flex;gap:5px;margin-left:6px}
+  .tab{font-size:12.5px;padding:6px 13px;border-radius:8px;color:#7d766c}
+  .tab.on{background:#26241f;color:#faf8f5}
+  .abar .right{margin-left:auto;font-size:12px;color:#a29a8e}
+
+  .inbox{display:grid;grid-template-columns:268px 1fr 244px;height:530px}
+  .list{border-right:1px solid rgba(0,0,0,.06);overflow-y:auto}
+  .thread{padding:13px 17px;border-bottom:1px solid rgba(0,0,0,.045);cursor:pointer}
+  .thread.on{background:#f1ece4}
+  .thread .top{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+  .thread .nm{font-size:13px;font-weight:600;letter-spacing:-.01em}
+  .chan{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:#e6ded2;color:#7d766c}
+  .chan.tg{background:#dbe8f0;color:#4a6b80}
+  .chan.em{background:#e4e0ee;color:#5f5680}
+  .thread .pv{font-size:11.5px;color:#8d867c;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .thread .mt{font-size:10.5px;color:#b0a89c;margin-top:5px;display:flex;gap:8px}
+  .pill{font-size:9.5px;padding:2px 7px;border-radius:999px;background:#8a9a7b;color:#fff;letter-spacing:.03em}
+  .pill.part{background:#c9a961}
+
+  .convo{display:flex;flex-direction:column;border-right:1px solid rgba(0,0,0,.06)}
+  .ch{padding:13px 20px;border-bottom:1px solid rgba(0,0,0,.05);display:flex;align-items:center;gap:9px}
+  .ch .nm{font-size:13.5px;font-weight:600}
+  .cb{flex:1;padding:16px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:9px}
+  .m{max-width:78%;padding:9px 12px;font-size:12.5px;line-height:1.48;border-radius:14px}
+  .m.c{align-self:flex-end;background:#26241f;color:#f8f5f0;border-bottom-right-radius:4px}
+  .m.a{align-self:flex-start;background:#f1ece4;border-bottom-left-radius:4px}
+  .m .tag{display:block;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;opacity:.5;margin-bottom:3px}
+  .cf{padding:12px 18px;border-top:1px solid rgba(0,0,0,.05);display:flex;gap:9px;align-items:center}
+  .takeover{font-size:12px;padding:8px 15px;border-radius:999px;border:1px solid rgba(0,0,0,.16);color:#3b3833}
+  .cf .fill{flex:1;font-size:12.5px;padding:8px 13px;border-radius:999px;background:#f1ece4;color:#a8a096}
+
+  .side{padding:18px;overflow-y:auto}
+  .side h4{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#a29a8e;margin-bottom:13px}
+  .fld{margin-bottom:13px}
+  .fld .k{font-size:10.5px;color:#a29a8e;letter-spacing:.04em;text-transform:uppercase}
+  .fld .v{font-size:13px;margin-top:2px;color:#26241f}
+  .fld .v.no{color:#c4bcb0;font-style:italic}
+  .bar{height:4px;border-radius:2px;background:#e6ded2;margin:5px 0 17px;overflow:hidden}
+  .bar i{display:block;height:100%;width:100%;background:#8a9a7b}
+  .note{font-size:11px;color:#8d867c;line-height:1.5;padding:11px;background:#f1ece4;border-radius:8px;margin-top:6px}
+
+  /* ── simulator ── */
+  .sim{padding:34px;display:flex;gap:38px;align-items:flex-start;height:530px}
+  .phone{width:288px;height:462px;border-radius:38px;background:#000;padding:9px;flex:none;box-shadow:0 18px 44px rgba(0,0,0,.28)}
+  .screen{background:#fff;border-radius:30px;height:100%;overflow:hidden;display:flex;flex-direction:column}
+  .sb{padding:11px 20px 5px;display:flex;justify-content:space-between;font-size:10.5px;font-weight:600}
+  .th{padding:7px 15px 10px;border-bottom:1px solid #e5e5ea;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .th .av{width:34px;height:34px;border-radius:50%;background:#26241f;color:#faf8f5;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+  .th .nm{font-size:11px;color:#000}
+  .tb{flex:1;padding:12px 11px;display:flex;flex-direction:column;gap:5px;overflow-y:auto;background:#fff}
+  .b{max-width:74%;padding:8px 12px;border-radius:17px;font-size:12.5px;line-height:1.35}
+  .b.them{align-self:flex-start;background:#e9e9eb;color:#000}
+  .b.me{align-self:flex-end;background:#34c759;color:#fff}
+  .tf{padding:8px 11px;border-top:1px solid #e5e5ea;display:flex;gap:7px;align-items:center}
+  .tf .inp{flex:1;border:1px solid #d1d1d6;border-radius:999px;padding:6px 12px;font-size:12px;color:#aeaeb2}
+  .simnote{flex:1;padding-top:6px}
+  .simnote h3{font-size:19px;letter-spacing:-.015em;margin-bottom:11px}
+  .simnote p{font-size:13.5px;line-height:1.62;color:#68625a;margin-bottom:13px;max-width:430px}
+  .simnote .warn{font-size:12px;color:#8a6d3b;background:#f7f0e2;border:1px solid rgba(201,169,97,.35);border-radius:9px;padding:12px;max-width:430px;line-height:1.55}
+</style></head><body>
+
+<div class="lab"><h2>Route map</h2><span>4 templates · 10 routes · 2 API endpoints</span></div>
+<div class="frame"><div class="map">
+  <div class="col"><h3>Public</h3>
+    <div class="route"><code>/</code><p>Hero, the six products, chat widget. Server-rendered from the company JSON.</p></div>
+    <div class="route"><code>/products/[slug]</code><p>× 6, generated from the same JSON. Widget follows you across pages.</p></div>
+  </div>
+  <div class="col"><h3>Admin · password gated</h3>
+    <div class="route lock"><code>/admin</code><p>Live inbox. All four channels in one list, updating in real time.</p></div>
+    <div class="route lock"><code>/admin/leads</code><p>Every completed lead, exportable.</p></div>
+    <div class="route lock"><code>/admin/simulator</code><p>Fake iPhone Messages, for demoing the texting experience.</p></div>
+    <div class="route lock"><code>/admin/login</code><p>Single password, httpOnly cookie.</p></div>
+  </div>
+  <div class="col"><h3>API</h3>
+    <div class="route api"><code>POST /api/chat</code><p>Streams tokens back over SSE. Calls handleInbound().</p></div>
+    <div class="route api"><code>POST /api/telegram</code><p>Bot webhook. Same handleInbound().</p></div>
+    <div class="note" style="margin-top:14px">Both endpoints are thin. All the logic already lives in <code style="font-family:'SF Mono',monospace;font-size:11.5px">lib/handle.ts</code>, which is why a third channel is a small job.</div>
+  </div>
+</div></div>
+
+<div class="lab"><h2>/admin — live inbox</h2><span>every channel in one list; take over from the agent mid-conversation</span></div>
+<div class="frame">
+  <div class="abar">
+    <div class="brand">LUMEA</div>
+    <div class="tabs"><div class="tab on">Inbox</div><div class="tab">Leads</div><div class="tab">Simulator</div></div>
+    <div class="right">3 active · 1 needs a human</div>
+  </div>
+  <div class="inbox">
+    <div class="list">
+      <div class="thread on">
+        <div class="top"><span class="nm">Riti Moradiya</span><span class="chan">Web</span></div>
+        <div class="pv">Thanks, Riti. If you'd prefer a quick call…</div>
+        <div class="mt"><span class="pill">Lead ready</span><span>2m ago</span></div>
+      </div>
+      <div class="thread">
+        <div class="top"><span class="nm">+44 7700 900…</span><span class="chan tg">Telegram</span></div>
+        <div class="pv">is the retinol okay with tretinoin?</div>
+        <div class="mt"><span class="pill part">3 / 4</span><span>8m ago</span></div>
+      </div>
+      <div class="thread">
+        <div class="top"><span class="nm">j.okafor@…</span><span class="chan em">Email</span></div>
+        <div class="pv">I had a reaction to the vitamin C…</div>
+        <div class="mt"><span class="pill part">2 / 4</span><span>31m ago</span></div>
+      </div>
+      <div class="thread">
+        <div class="top"><span class="nm">Anonymous</span><span class="chan">Web</span></div>
+        <div class="pv">just browsing thanks</div>
+        <div class="mt"><span>1h ago</span></div>
+      </div>
+    </div>
+
+    <div class="convo">
+      <div class="ch"><div class="av" style="width:26px;height:26px;border-radius:50%;background:#26241f;color:#faf8f5;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600">R</div><div class="nm">Riti Moradiya</div><span class="chan">Web</span></div>
+      <div class="cb">
+        <div class="m c">it's really dry and flaky, and pretty sensitive</div>
+        <div class="m a"><span class="tag">Agent</span>For dry, flaky, sensitive skin I'd start with Clarity Gel Cleanser, then Shield Barrier Cream, and Daylight Mineral SPF 50 each morning. All three are fragrance-free. Do you already have a routine, or building one from scratch?</div>
+        <div class="m c">first time doing this properly</div>
+        <div class="m a"><span class="tag">Agent</span>Then those three are all you need for now — retinol and vitamin C can come later once your skin has settled. Could I take your name and email so we can send a written routine?</div>
+        <div class="m c">Riti Moradiya, riti@example.com</div>
+        <div class="m a"><span class="tag">Agent</span>Thanks, Riti. If you'd prefer a quick call rather than email, could you share a phone number?</div>
+      </div>
+      <div class="cf"><div class="takeover">Take over</div><div class="fill">Reply as a human…</div></div>
+    </div>
+
+    <div class="side">
+      <h4>Collected</h4>
+      <div class="bar"><i style="width:100%"></i></div>
+      <div class="fld"><div class="k">Concern</div><div class="v">dry, flaky, sensitive</div></div>
+      <div class="fld"><div class="k">Experience</div><div class="v">first time</div></div>
+      <div class="fld"><div class="k">Name</div><div class="v">Riti Moradiya</div></div>
+      <div class="fld"><div class="k">Email</div><div class="v">riti@example.com</div></div>
+      <div class="fld"><div class="k">Phone</div><div class="v no">not given — optional</div></div>
+      <h4 style="margin-top:22px">Delivery</h4>
+      <div class="fld"><div class="k">Routine emailed</div><div class="v">14:46</div></div>
+      <div class="fld"><div class="k">Alert sent</div><div class="v">14:46</div></div>
+      <div class="note">Asks made: experience 1, contact 1, phone 1. The agent stopped chasing the phone number after one attempt.</div>
+    </div>
+  </div>
+</div>
+
+<div class="lab"><h2>/admin/simulator</h2><span>demo the texting experience with no phone number involved</span></div>
+<div class="frame"><div class="sim">
+  <div class="phone"><div class="screen">
+    <div class="sb"><span>9:41</span><span>▮▮▮ ⌁</span></div>
+    <div class="th"><div class="av">L</div><div class="nm">Lumea</div></div>
+    <div class="tb">
+      <div class="b them">Hi — I'm Lumea's assistant. What's been bothering your skin lately?</div>
+      <div class="b me">breaking out along my jaw</div>
+      <div class="b them">That pattern often responds well to keeping the barrier calm rather than stripping it. Clarity Gel Cleanser twice daily and Shield Barrier Cream would be where I'd start.</div>
+      <div class="b them">Have you used any actives before, or would this be a fresh start?</div>
+    </div>
+    <div class="tf"><div class="inp">Text Message</div><span style="color:#34c759;font-size:17px">↑</span></div>
+  </div></div>
+  <div class="simnote">
+    <h3>Why a simulator</h3>
+    <p>Runs through the identical <code style="font-family:'SF Mono',monospace;font-size:12.5px">handleInbound()</code> call a real SMS would, stored under the <code style="font-family:'SF Mono',monospace;font-size:12.5px">simulator</code> channel. Anyone can try the texting experience in one click — no phone number, no app install.</p>
+    <p>For an interview that matters: a recruiter clicks a link and is texting your agent in three seconds.</p>
+    <div class="warn"><strong>Labelled as a simulator in the UI.</strong> It demonstrates the flow, it isn't real SMS. Presenting it as live texting would be dishonest, and a technical interviewer would catch it in one question.</div>
+  </div>
+</div></div>
+
+</body></html>

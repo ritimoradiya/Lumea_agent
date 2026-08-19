@@ -14,6 +14,8 @@ import { z } from "zod";
 export const ProductSchema = z.object({
   id: z.string(),
   name: z.string(),
+  /** Groups the storefront grid: Cleanse, Treat, Hydrate, Protect. */
+  category: z.string().default("Other"),
   price: z.string().optional(),
   summary: z.string(),
   /** Free-form spec sheet. Skincare uses "Key ingredients"; freight uses "Equipment". */

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lumea — liquid hero</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+       background:#faf8f5;color:#26241f;overflow-x:hidden}
+  #liquid{position:fixed;inset:0;z-index:0}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:.04;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E")}
+  nav{position:relative;z-index:2;padding:26px 48px;display:flex;justify-content:space-between;align-items:center}
+  nav .brand{font-size:19px;font-weight:500;letter-spacing:.16em}
+  nav .links{display:flex;gap:32px;font-size:13px;color:#5f5a52}
+  .hero{position:relative;z-index:2;min-height:calc(100vh - 78px);
+        display:flex;flex-direction:column;justify-content:center;padding:0 48px;max-width:1000px}
+  .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9c9488;margin-bottom:26px;
+    opacity:0;animation:up .9s .15s cubic-bezier(.22,1,.36,1) forwards}
+  h1{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-weight:400;
+     font-size:clamp(46px,7.4vw,96px);line-height:.99;letter-spacing:-.03em}
+  h1 .w{display:inline-block;opacity:0;animation:up 1.05s cubic-bezier(.22,1,.36,1) forwards}
+  h1 em{font-style:italic;color:#7f9070}
+  .sub{margin-top:30px;font-size:17px;line-height:1.62;color:#5c564e;max-width:430px;
+       opacity:0;animation:up .9s .78s cubic-bezier(.22,1,.36,1) forwards}
+  .cta{margin-top:38px;display:flex;gap:12px;
+       opacity:0;animation:up .9s .92s cubic-bezier(.22,1,.36,1) forwards}
+  .btn{padding:15px 30px;border-radius:999px;font-size:13.5px;cursor:pointer;
+       transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s}
+  .btn:hover{transform:translateY(-2px)}
+  .solid{background:#26241f;color:#faf8f5;font-weight:500}
+  .solid:hover{box-shadow:0 10px 26px rgba(38,36,31,.24)}
+  .ghost{border:1px solid rgba(0,0,0,.15);color:#3b3833;backdrop-filter:blur(8px)}
+  @keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .strip{position:relative;z-index:2;padding:0 48px 60px;display:flex;gap:10px;flex-wrap:wrap;
+    opacity:0;animation:up .9s 1.06s cubic-bezier(.22,1,.36,1) forwards}
+  .chip{font-size:12px;padding:9px 17px;border-radius:999px;border:1px solid rgba(0,0,0,.08);
+    background:rgba(255,255,255,.5);backdrop-filter:blur(10px);color:#5f5a52}
+</style></head><body>
+<canvas id="liquid"></canvas>
+<div class="grain"></div>
+<nav><div class="brand">LUMEA</div>
+  <div class="links"><span>Shop</span><span>Routines</span><span>Ingredients</span><span>Journal</span></div>
+</nav>
+<section class="hero">
+  <div class="eyebrow">Fragrance-free · Dermatologist tested</div>
+  <h1 id="head"></h1>
+  <p class="sub">Twelve products. No filler, no upsell. Formulated in Copenhagen for skin that would rather not be shouted at.</p>
+  <div class="cta"><div class="btn solid">Shop the twelve</div><div class="btn ghost">Build a routine</div></div>
+</section>
+<div class="strip">
+  <div class="chip">Vegan</div><div class="chip">Cruelty-free</div><div class="chip">Fragrance-free</div>
+  <div class="chip">Non-comedogenic</div><div class="chip">Made in Copenhagen</div>
+</div>
+
+<script type="module">
+const head = document.getElementById('head');
+head.innerHTML = [['Clinical',0],['care,',1],['<em>quietly</em>',2],['done.',3]]
+  .map(([w,i]) => `<span class="w" style="animation-delay:${.3+i*.1}s">${w}</span>`).join(' ');
+
+const canvas = document.getElementById('liquid');
+const gl = canvas.getContext('webgl');
+
+const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
+
+// Domain-warped fractal noise. Warping the input of one noise field by
+// another is what produces flow that reads as liquid rather than as clouds
+// — the same trick used for marbling and ink-in-water effects.
+const FRAG = `
+precision highp float;
+uniform vec2  u_res;
+uniform float u_time;
+uniform vec2  u_mouse;
+
+vec2 hash(vec2 p){
+  p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)));
+  return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+}
+float noise(vec2 p){
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f*f*(3.0-2.0*f);
+  return mix(mix(dot(hash(i+vec2(0,0)), f-vec2(0,0)),
+                 dot(hash(i+vec2(1,0)), f-vec2(1,0)), u.x),
+             mix(dot(hash(i+vec2(0,1)), f-vec2(0,1)),
+                 dot(hash(i+vec2(1,1)), f-vec2(1,1)), u.x), u.y);
+}
+float fbm(vec2 p){
+  float v = 0.0, a = 0.5;
+  for(int i=0;i<5;i++){ v += a*noise(p); p *= 2.02; a *= 0.5; }
+  return v;
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_res.xy;
+  vec2 q  = uv;
+  q.x *= u_res.x / u_res.y;
+
+  float t = u_time * 0.055;
+  vec2 drift = (u_mouse - 0.5) * 0.22;
+
+  // First field warps the second — this is the liquid part.
+  vec2 w = vec2(
+    fbm(q * 1.9 + vec2(0.0, t) + drift),
+    fbm(q * 1.9 + vec2(3.7, -t * 0.85) + drift)
+  );
+  float f = fbm(q * 2.4 + w * 2.4 + vec2(t * 0.5, 0.0));
+  f = f * 0.5 + 0.5;
+
+  // Palette: paper, warm stone, sage, amber in the deepest folds.
+  vec3 paper = vec3(0.980, 0.972, 0.960);
+  vec3 stone = vec3(0.871, 0.831, 0.769);
+  vec3 sage  = vec3(0.545, 0.627, 0.494);
+  vec3 deep  = vec3(0.325, 0.408, 0.290);
+  vec3 amber = vec3(0.816, 0.573, 0.263);
+
+  vec3 col = mix(paper, stone, smoothstep(0.24, 0.55, f));
+  col = mix(col, sage,  smoothstep(0.38, 0.74, f) * 1.0);
+  col = mix(col, deep,  smoothstep(0.66, 0.94, f) * 0.85);
+  col = mix(col, amber, smoothstep(0.60, 0.72, f) * (1.0 - smoothstep(0.72, 0.84, f)) * 0.55);
+
+  // A bright sheen along the warp gradient, like light across liquid.
+  float sheen = smoothstep(0.38, 0.47, f) * (1.0 - smoothstep(0.47, 0.60, f));
+  col += sheen * 0.16;
+
+  // Compose it: one large soft organic mass on the right, so the headline
+  // sits on clean paper instead of fighting the artwork.
+  vec2 c = vec2(0.715, 0.47);
+  vec2 d = (uv - c) * vec2(u_res.x / u_res.y * 0.52, 1.0);
+  float mass = 1.0 - smoothstep(0.06, 0.74, length(d));
+  // Let the noise chew at the silhouette so the edge is organic, not a circle.
+  mass = clamp(mass + (f - 0.5) * 0.50, 0.0, 1.0);
+  mass = smoothstep(0.04, 0.72, mass);
+
+  col = mix(paper, col, mass);
+
+  col *= 1.0 - 0.10 * pow(length(uv - 0.5) * 1.2, 2.6);
+  col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898,78.233))) * 43758.5453) - 0.5) * 0.006;
+
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+function compile(type, src){
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src); gl.compileShader(sh);
+  if(!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+  return sh;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+gl.linkProgram(prog); gl.useProgram(prog);
+
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, 'p');
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+const uRes = gl.getUniformLocation(prog,'u_res');
+const uTime = gl.getUniformLocation(prog,'u_time');
+const uMouse = gl.getUniformLocation(prog,'u_mouse');
+
+let mx = 0.5, my = 0.5, tmx = 0.5, tmy = 0.5;
+addEventListener('pointermove', e => { tmx = e.clientX/innerWidth; tmy = 1 - e.clientY/innerHeight; });
+
+function resize(){
+  const dpr = Math.min(devicePixelRatio, 1.75);
+  canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+addEventListener('resize', resize); resize();
+
+(function frame(t){
+  mx += (tmx-mx)*0.035; my += (tmy-my)*0.035;
+  gl.uniform2f(uRes, canvas.width, canvas.height);
+  gl.uniform1f(uTime, t*0.001);
+  gl.uniform2f(uMouse, mx, my);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  requestAnimationFrame(frame);
+})(0);
+</script>
+</body></html>
