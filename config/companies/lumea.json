@@ -1,0 +1,97 @@
+{
+  "slug": "lumea",
+  "name": "Lumea",
+  "industry": "Skincare / DTC e-commerce",
+  "tagline": "Clinical care, quietly done.",
+  "about": "Lumea is a small-batch skincare label making fragrance-free, dermatologist-tested essentials. Six products, no filler, no upsell. Everything is vegan and cruelty-free, formulated in Copenhagen.",
+  "supportHours": "Monday to Friday, 9am-6pm CET",
+  "extraRules": [
+    "NEVER give medical advice. For pregnancy, breastfeeding, prescription medication, skin conditions, allergies, or a reaction to a product, say it is worth checking with a doctor or dermatologist, and offer to have a human follow up."
+  ],
+  "products": [
+    {
+      "id": "clarity-cleanser",
+      "name": "Clarity Gel Cleanser",
+      "price": "$24",
+      "summary": "A low-foaming gel cleanser that removes sunscreen and grime without stripping.",
+      "details": {
+        "Size": "150ml",
+        "Key ingredients": "Coco-glucoside, Glycerin, Allantoin",
+        "Good for": "All skin types, daily use morning and night"
+      },
+      "notes": "pH 5.5. Safe to use twice daily, including on sensitive skin."
+    },
+    {
+      "id": "quench-serum",
+      "name": "Quench Hydrating Serum",
+      "price": "$38",
+      "summary": "A lightweight humectant serum that holds water in the upper layers of the skin.",
+      "details": {
+        "Size": "30ml",
+        "Key ingredients": "Hyaluronic acid (3 weights), Panthenol, Glycerin",
+        "Good for": "Dehydrated skin, layering under moisturiser"
+      },
+      "notes": "Apply to slightly damp skin, then seal with a moisturiser."
+    },
+    {
+      "id": "dawn-vitamin-c",
+      "name": "Dawn Vitamin C Serum",
+      "price": "$48",
+      "summary": "A stabilised vitamin C serum for uneven tone and post-blemish marks.",
+      "details": {
+        "Size": "30ml",
+        "Key ingredients": "15% THD ascorbate, Vitamin E, Ferulic acid",
+        "Good for": "Dullness, uneven tone, morning routines"
+      },
+      "notes": "Use in the morning. Do not layer in the same routine as Renew Retinol - alternate morning and night instead."
+    },
+    {
+      "id": "shield-cream",
+      "name": "Shield Barrier Cream",
+      "price": "$42",
+      "summary": "A ceramide moisturiser for compromised or over-exfoliated skin barriers.",
+      "details": {
+        "Size": "50ml",
+        "Key ingredients": "Ceramide NP, Niacinamide 4%, Squalane",
+        "Good for": "Dry skin, sensitised skin, winter"
+      },
+      "notes": "Fragrance-free and non-comedogenic."
+    },
+    {
+      "id": "daylight-spf",
+      "name": "Daylight Mineral SPF 50",
+      "price": "$32",
+      "summary": "A mineral sunscreen with a sheer finish and no chemical filters.",
+      "details": {
+        "Size": "50ml",
+        "Key ingredients": "Zinc oxide 22%, Squalane",
+        "Good for": "Daily protection, sensitive and reactive skin"
+      },
+      "notes": "Leaves a very slight cast on deeper skin tones. Reapply every two hours of direct sun exposure."
+    },
+    {
+      "id": "renew-retinol",
+      "name": "Renew Retinol Night Treatment",
+      "price": "$54",
+      "summary": "An encapsulated retinol treatment for texture and fine lines, released slowly overnight.",
+      "details": {
+        "Size": "30ml",
+        "Key ingredients": "0.3% encapsulated retinol, Bisabolol, Squalane",
+        "Good for": "Texture, fine lines, night use only"
+      },
+      "notes": "Start twice weekly and build up. Always pair with daily sunscreen. Not suitable during pregnancy or breastfeeding."
+    }
+  ],
+  "faqs": [
+    { "q": "How long does shipping take?", "a": "Within the EU, 2-4 working days. UK and US, 5-8 working days. Free shipping over $60; otherwise $6 flat." },
+    { "q": "What is the returns policy?", "a": "60 days, opened or unopened. We send a prepaid label and refund to the original payment method once it is scanned." },
+    { "q": "Do you offer subscriptions?", "a": "Yes - any product on a 30, 60, or 90 day cycle at 15% off. You can skip, pause, or cancel at any time from your account." },
+    { "q": "Are you cruelty-free and vegan?", "a": "Both. Leaping Bunny certified, and no animal-derived ingredients in any product." },
+    { "q": "What order do I apply things in?", "a": "Thinnest to thickest: cleanser, then Quench serum, then Dawn vitamin C (mornings) or Renew retinol (nights), then Shield cream, then Daylight SPF last in the morning." },
+    { "q": "Can I use vitamin C and retinol together?", "a": "Not in the same routine. Use Dawn in the morning and Renew at night - layering them tends to cause irritation without extra benefit." },
+    { "q": "Is any of this safe during pregnancy?", "a": "Renew Retinol is not recommended during pregnancy or breastfeeding. The other five have no pregnancy restrictions, but we always suggest confirming with your doctor or midwife." },
+    { "q": "I have sensitive skin - where should I start?", "a": "Clarity cleanser and Shield cream are the gentlest starting point. Everything is fragrance-free. Add actives one at a time, a few weeks apart." },
+    { "q": "Should I patch test?", "a": "Yes, especially with Dawn and Renew. Apply a small amount to the inner forearm for three consecutive days before using on the face." },
+    { "q": "Where are the products made?", "a": "Formulated and filled in Copenhagen, Denmark." }
+  ]
+}
