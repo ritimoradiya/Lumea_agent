@@ -33,6 +33,9 @@ export const CompanySchema = z.object({
   tagline: z.string(),
   about: z.string(),
   supportHours: z.string(),
+  /** First thing a customer sees. Static text: instant, and no risk
+   *  of the model fumbling the opening line. */
+  greeting: z.string().optional(),
   /** Industry-specific guardrails appended to the universal rule set. */
   extraRules: z.array(z.string()).default([]),
   products: z.array(ProductSchema).default([]),
@@ -88,6 +91,14 @@ export async function getCompany(slug?: string): Promise<Company> {
 }
 
 /** Compact catalogue text for the system prompt. */
+/** The opening line, falling back to a generic one if unset. */
+export function greetingFor(company: Company): string {
+  return (
+    company.greeting ??
+    `Hi, I'm the ${company.name} assistant. How can I help?`
+  );
+}
+
 export function catalogueForPrompt(company: Company): string {
   if (!company.products.length) return "(no products listed)";
 

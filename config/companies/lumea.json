@@ -5,6 +5,7 @@
   "tagline": "Clinical care, quietly done.",
   "about": "Lumea is a small-batch skincare label making fragrance-free, dermatologist-tested essentials. Six products, no filler, no upsell. Everything is vegan and cruelty-free, formulated in Copenhagen.",
   "supportHours": "Monday to Friday, 9am-6pm CET",
+  "greeting": "Hi, I'm the Lumea assistant. Ask me anything about our products, or tell me what you're looking for and I'll make sure the right person follows up.",
   "extraRules": [
     "NEVER give medical advice. For pregnancy, breastfeeding, prescription medication, skin conditions, allergies, or a reaction to a product, say it is worth checking with a doctor or dermatologist, and offer to have a human follow up."
   ],
@@ -83,15 +84,45 @@
     }
   ],
   "faqs": [
-    { "q": "How long does shipping take?", "a": "Within the EU, 2-4 working days. UK and US, 5-8 working days. Free shipping over $60; otherwise $6 flat." },
-    { "q": "What is the returns policy?", "a": "60 days, opened or unopened. We send a prepaid label and refund to the original payment method once it is scanned." },
-    { "q": "Do you offer subscriptions?", "a": "Yes - any product on a 30, 60, or 90 day cycle at 15% off. You can skip, pause, or cancel at any time from your account." },
-    { "q": "Are you cruelty-free and vegan?", "a": "Both. Leaping Bunny certified, and no animal-derived ingredients in any product." },
-    { "q": "What order do I apply things in?", "a": "Thinnest to thickest: cleanser, then Quench serum, then Dawn vitamin C (mornings) or Renew retinol (nights), then Shield cream, then Daylight SPF last in the morning." },
-    { "q": "Can I use vitamin C and retinol together?", "a": "Not in the same routine. Use Dawn in the morning and Renew at night - layering them tends to cause irritation without extra benefit." },
-    { "q": "Is any of this safe during pregnancy?", "a": "Renew Retinol is not recommended during pregnancy or breastfeeding. The other five have no pregnancy restrictions, but we always suggest confirming with your doctor or midwife." },
-    { "q": "I have sensitive skin - where should I start?", "a": "Clarity cleanser and Shield cream are the gentlest starting point. Everything is fragrance-free. Add actives one at a time, a few weeks apart." },
-    { "q": "Should I patch test?", "a": "Yes, especially with Dawn and Renew. Apply a small amount to the inner forearm for three consecutive days before using on the face." },
-    { "q": "Where are the products made?", "a": "Formulated and filled in Copenhagen, Denmark." }
+    {
+      "q": "How long does shipping take?",
+      "a": "Within the EU, 2-4 working days. UK and US, 5-8 working days. Free shipping over $60; otherwise $6 flat."
+    },
+    {
+      "q": "What is the returns policy?",
+      "a": "60 days, opened or unopened. We send a prepaid label and refund to the original payment method once it is scanned."
+    },
+    {
+      "q": "Do you offer subscriptions?",
+      "a": "Yes - any product on a 30, 60, or 90 day cycle at 15% off. You can skip, pause, or cancel at any time from your account."
+    },
+    {
+      "q": "Are you cruelty-free and vegan?",
+      "a": "Both. Leaping Bunny certified, and no animal-derived ingredients in any product."
+    },
+    {
+      "q": "What order do I apply things in?",
+      "a": "Thinnest to thickest: cleanser, then Quench serum, then Dawn vitamin C (mornings) or Renew retinol (nights), then Shield cream, then Daylight SPF last in the morning."
+    },
+    {
+      "q": "Can I use vitamin C and retinol together?",
+      "a": "Not in the same routine. Use Dawn in the morning and Renew at night - layering them tends to cause irritation without extra benefit."
+    },
+    {
+      "q": "Is any of this safe during pregnancy?",
+      "a": "Renew Retinol is not recommended during pregnancy or breastfeeding. The other five have no pregnancy restrictions, but we always suggest confirming with your doctor or midwife."
+    },
+    {
+      "q": "I have sensitive skin - where should I start?",
+      "a": "Clarity cleanser and Shield cream are the gentlest starting point. Everything is fragrance-free. Add actives one at a time, a few weeks apart."
+    },
+    {
+      "q": "Should I patch test?",
+      "a": "Yes, especially with Dawn and Renew. Apply a small amount to the inner forearm for three consecutive days before using on the face."
+    },
+    {
+      "q": "Where are the products made?",
+      "a": "Formulated and filled in Copenhagen, Denmark."
+    }
   ]
 }

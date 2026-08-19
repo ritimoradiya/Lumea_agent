@@ -1,15 +1,18 @@
 import { z } from "zod";
 import type { Brain, ChatMessage } from "../brain";
-import type { Collected } from "./checklist";
+import { FIELD_LABELS, type Collected, type Field } from "./checklist";
 
 /**
  * Field extraction.
  *
- * Deliberately hybrid. Email and phone numbers have strict shapes, so
- * a regex reads them far more reliably than any model will — and a
- * mistyped email is the single worst failure this agent can have. The
- * model is only asked for the fuzzy fields: names and the description.
- * Where both find something, the regex wins.
+ * Deliberately hybrid. Email and phone numbers have strict shapes, so a
+ * regex reads them far more reliably than any model will — and a
+ * mistyped email is the worst failure this agent can have. The model is
+ * only asked for the fuzzy fields: names and the description.
+ *
+ * The model is told which field we just asked for, which is what makes
+ * a bare reply like "Riti" unambiguous, and is told what we already
+ * have so it never re-reports a stale value from earlier in the thread.
  */
 
 const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
@@ -29,38 +32,30 @@ function findEmail(text: string): string | undefined {
   return text.match(EMAIL_RE)?.[0]?.toLowerCase();
 }
 
+function isPlausiblePhone(value: string): boolean {
+  const digits = value.replace(/\D/g, "");
+  // Real phone numbers land in this range; order numbers and years don't.
+  return digits.length >= 8 && digits.length <= 15;
+}
+
 function findPhone(text: string): string | undefined {
-  const candidates = text.match(PHONE_CANDIDATE_RE) ?? [];
-  for (const candidate of candidates) {
-    const digits = candidate.replace(/\D/g, "");
-    // Real phone numbers land in this range; order numbers and years don't.
-    if (digits.length >= 8 && digits.length <= 15) {
-      return candidate.trim();
-    }
+  for (const candidate of text.match(PHONE_CANDIDATE_RE) ?? []) {
+    if (isPlausiblePhone(candidate)) return candidate.trim();
   }
   return undefined;
 }
 
-const EXTRACTION_PROMPT = `You extract contact details from a customer support message.
+export type ExtractOptions = {
+  /** The field the agent asked for on the previous turn, if any. */
+  asking: Field | null;
+  /** Already-known values, so the model doesn't echo them back. */
+  alreadyHave: Collected;
+};
 
-Return ONLY a JSON object with exactly these keys:
-{"firstName": null, "lastName": null, "email": null, "phone": null, "description": null}
-
-Rules:
-- Use null for anything the customer has not clearly stated. Never guess.
-- Only extract what THIS customer said about THEMSELVES.
-- "description" is a short phrase (under 15 words) describing what they need help with, in your own words. Null if they have not said yet.
-- If they give a full name, split it into firstName and lastName.
-- Never invent a placeholder like "John Doe" or "unknown".`;
-
-/**
- * Pull any newly stated details out of the latest customer message.
- * Returns only what it found — merging is the caller's job.
- */
 export async function extractFields(
   brain: Brain,
   customerMessage: string,
-  recentContext: ChatMessage[] = []
+  options: ExtractOptions
 ): Promise<Collected> {
   const found: Collected = {};
 
@@ -72,23 +67,42 @@ export async function extractFields(
   if (phone) found.phone = phone;
 
   // 2. Model pass for the fuzzy fields.
-  const context = recentContext
-    .slice(-4)
-    .map((m) => `${m.role === "user" ? "Customer" : "Agent"}: ${m.content}`)
-    .join("\n");
+  const known = Object.entries(options.alreadyHave)
+    .filter(([, v]) => v?.trim())
+    .map(([k]) => k);
+
+  const system = `You extract contact details from ONE customer message.
+
+Return ONLY a JSON object with exactly these keys:
+{"firstName": null, "lastName": null, "email": null, "phone": null, "description": null}
+
+Rules:
+- Extract ONLY from the message given. Ignore anything you infer from elsewhere.
+- Use null for anything not clearly stated in that message. Never guess.
+- Only extract what the customer says about THEMSELVES.
+- "description" is a short phrase, under 15 words, for what they need help with.
+  If they state a new need, return the NEW one.
+- A full name splits into firstName and lastName.
+- Never invent a placeholder like "John Doe" or "unknown".${
+    options.asking
+      ? `\n- The agent just asked for ${FIELD_LABELS[options.asking]}, so a bare
+  reply is most likely that.`
+      : ""
+  }${
+    known.length
+      ? `\n- Already on file, do NOT return these unless the message changes them: ${known.join(
+          ", "
+        )}.`
+      : ""
+  }`;
 
   const messages: ChatMessage[] = [
-    { role: "system", content: EXTRACTION_PROMPT },
-    {
-      role: "user",
-      content:
-        (context ? `Recent conversation:\n${context}\n\n` : "") +
-        `Latest customer message:\n${customerMessage}`,
-    },
+    { role: "system", content: system },
+    { role: "user", content: customerMessage },
   ];
 
   try {
-    const raw = await brain.complete(messages, { json: true, maxTokens: 200 });
+    const raw = await brain.complete(messages, { json: true, maxTokens: 200, reasoningEffort: "low" });
     const parsed = ExtractionSchema.safeParse(JSON.parse(raw));
 
     if (parsed.success) {
@@ -100,9 +114,8 @@ export async function extractFields(
       if (!found.email && d.email && EMAIL_RE.test(d.email)) {
         found.email = d.email.trim().toLowerCase();
       }
-      if (!found.phone && d.phone) {
-        const digits = d.phone.replace(/\D/g, "");
-        if (digits.length >= 8 && digits.length <= 15) found.phone = d.phone.trim();
+      if (!found.phone && d.phone && isPlausiblePhone(d.phone)) {
+        found.phone = d.phone.trim();
       }
     }
   } catch {

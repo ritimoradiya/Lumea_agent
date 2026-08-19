@@ -15,7 +15,7 @@ import { stdin as input, stdout as output } from "node:process";
 import { getBrain } from "../lib/brain";
 import { respond } from "../lib/agent/respond";
 import { progress, type Collected } from "../lib/agent/checklist";
-import { getCompany, type Company } from "../lib/company";
+import { getCompany, greetingFor, type Company } from "../lib/company";
 import type { ChatMessage } from "../lib/brain";
 
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
@@ -46,6 +46,7 @@ async function main() {
     )
   );
   console.log(dim("  /state  /reset  /quit\n"));
+  console.log(cyan("Lumea") + "  " + greetingFor(company) + "\n");
 
   const rl = readline.createInterface({ input, output });
 

@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "chat": "tsx scripts/chat.ts",
-    "models": "tsx scripts/models.ts"
+    "models": "tsx scripts/models.ts",
+    "smoke": "tsx scripts/smoke.ts",
+    "bench": "tsx scripts/bench.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

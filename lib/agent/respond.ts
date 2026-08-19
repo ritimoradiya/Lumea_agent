@@ -6,7 +6,7 @@ import { isComplete, merge, nextField, type Collected } from "./checklist";
 
 export type RespondInput = {
   brain: Brain;
-  /** The tenant this conversation belongs to. */
+  /** The company this agent is representing. */
   company: Company;
   /** Prior turns, oldest first. Excludes the message being handled now. */
   history: ChatMessage[];
@@ -23,9 +23,9 @@ export type RespondResult = {
 };
 
 /**
- * The core of the agent. Channel-agnostic and tenant-agnostic on
- * purpose: the web widget, Telegram, email, and the simulator all call
- * this same function, for whichever company is active.
+ * The core of the agent. Channel-agnostic on purpose: the web widget,
+ * Telegram, email, and the simulator all call this same function, which
+ * is what makes adding a channel a small job.
  *
  * Extraction runs BEFORE the reply rather than in the background. It
  * costs a few hundred milliseconds, but it means we can never ask a
@@ -38,7 +38,14 @@ export async function respond(
 ): Promise<RespondResult> {
   const { brain, company, history, customerMessage } = input;
 
-  const learned = await extractFields(brain, customerMessage, history);
+  // What we asked for last turn — lets extraction read a bare reply
+  // like "Riti" as a first name rather than as noise.
+  const asking = nextField(input.collected);
+
+  const learned = await extractFields(brain, customerMessage, {
+    asking,
+    alreadyHave: input.collected,
+  });
   const collected = merge(input.collected, learned);
 
   const messages: ChatMessage[] = [
@@ -46,12 +53,18 @@ export async function respond(
       role: "system",
       content: buildSystemPrompt(company, collected, nextField(collected)),
     },
-    ...history.slice(-12),
+    ...history.slice(-8),
     { role: "user", content: customerMessage },
   ];
 
+  // 160 tokens is roughly four sentences. Capping it enforces the brevity
+  // the prompt asks for, and is the single biggest lever on latency —
+  // generation time scales with how much the model writes.
   let reply = "";
-  for await (const token of brain.stream(messages, { maxTokens: 300 })) {
+  for await (const token of brain.stream(messages, {
+    maxTokens: 160,
+    reasoningEffort: "low",
+  })) {
     reply += token;
     onToken?.(token);
   }

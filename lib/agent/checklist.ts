@@ -44,18 +44,33 @@ export function isComplete(collected: Collected): boolean {
 }
 
 /**
- * Merge newly extracted values over what we already have.
- * Existing values win — we never overwrite a confirmed detail with a
- * later guess, which stops the agent from corrupting good data.
+ * Identity details are locked once known — a later guess must never
+ * overwrite a confirmed email or phone number.
  */
+const LOCKED_FIELDS: Field[] = ["firstName", "lastName", "email", "phone"];
+
+/**
+ * The description is expected to evolve. Someone who opens with
+ * "something for sensitive skin" and later says "actually I need a dry
+ * skin routine" should end up with the second one on their lead.
+ */
+const MUTABLE_FIELDS: Field[] = ["description"];
+
+/** Merge newly extracted values into what we already have. */
 export function merge(current: Collected, incoming: Collected): Collected {
   const next: Collected = { ...current };
+
   for (const field of FIELDS) {
     const value = incoming[field]?.trim();
-    if (value && !next[field]?.trim()) {
+    if (!value) continue;
+
+    if (MUTABLE_FIELDS.includes(field)) {
+      next[field] = value;
+    } else if (LOCKED_FIELDS.includes(field) && !next[field]?.trim()) {
       next[field] = value;
     }
   }
+
   return next;
 }
 

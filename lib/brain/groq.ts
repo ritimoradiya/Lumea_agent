@@ -6,6 +6,7 @@ export class GroqBrain implements Brain {
   readonly name: string;
   private client: Groq;
   private model: string;
+  private supportsReasoningEffort: boolean;
 
   constructor() {
     const apiKey = process.env.GROQ_API_KEY;
@@ -14,9 +15,11 @@ export class GroqBrain implements Brain {
         "GROQ_API_KEY is missing from .env.local — get one at console.groq.com/keys"
       );
     }
-    this.model = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
+    this.model = process.env.GROQ_MODEL ?? "openai/gpt-oss-20b";
     this.client = new Groq({ apiKey });
     this.name = `groq:${this.model}`;
+    // Only the gpt-oss family accepts reasoning_effort; qwen returns a 400.
+    this.supportsReasoningEffort = this.model.includes("gpt-oss");
   }
 
   async *stream(
@@ -29,6 +32,9 @@ export class GroqBrain implements Brain {
       stream: true,
       max_tokens: options.maxTokens ?? 400,
       temperature: options.temperature ?? 0.6,
+      ...(this.supportsReasoningEffort
+        ? { reasoning_effort: options.reasoningEffort ?? "low" }
+        : {}),
     });
 
     for await (const chunk of completion) {
@@ -47,6 +53,10 @@ export class GroqBrain implements Brain {
       max_tokens: options.maxTokens ?? 400,
       // Extraction wants determinism; conversation wants a little warmth.
       temperature: options.temperature ?? (options.json ? 0 : 0.6),
+      // Pulling fields out of one sentence needs minimal deliberation.
+      ...(this.supportsReasoningEffort
+        ? { reasoning_effort: options.reasoningEffort ?? "low" }
+        : {}),
       ...(options.json ? { response_format: { type: "json_object" } } : {}),
     });
 

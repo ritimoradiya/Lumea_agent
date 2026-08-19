@@ -16,6 +16,9 @@ export type CompleteOptions = {
   json?: boolean;
   maxTokens?: number;
   temperature?: number;
+  /** Reasoning models (gpt-oss) think before answering; "low" keeps
+   *  latency usable for live chat. Ignored by non-reasoning models. */
+  reasoningEffort?: "none" | "low" | "medium" | "high";
 };
 
 export interface Brain {
