@@ -16,6 +16,12 @@ export const ProductSchema = z.object({
   name: z.string(),
   /** Groups the storefront grid: Cleanse, Treat, Hydrate, Protect. */
   category: z.string().default("Other"),
+  /**
+   * Glass colour for the rendering, as a hex string. Explicit per product
+   * rather than derived, so twelve products are twelve distinct colours and
+   * any one of them can be adjusted without touching code.
+   */
+  tint: z.string().optional(),
   price: z.string().optional(),
   summary: z.string(),
   /** Free-form spec sheet. Skincare uses "Key ingredients"; freight uses "Equipment". */

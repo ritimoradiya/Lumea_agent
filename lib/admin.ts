@@ -15,12 +15,30 @@ export type ThreadSummary = {
   updatedAt: string;
 };
 
-export async function listThreads(limit = 40): Promise<ThreadSummary[]> {
-  const { data, error } = await db()
+export type ThreadFilter = {
+  /**
+   * Simulator threads are demonstrations, not customers. After a few demos
+   * they outnumber the real conversations and bury genuine leads, so they are
+   * hidden unless asked for.
+   */
+  includeSimulator?: boolean;
+  limit?: number;
+};
+
+export async function listThreads(
+  filter: ThreadFilter = {}
+): Promise<ThreadSummary[]> {
+  const { includeSimulator = false, limit = 40 } = filter;
+
+  let query = db()
     .from("conversations")
     .select("id, channel, channel_thread_id, status, collected, updated_at")
     .order("updated_at", { ascending: false })
     .limit(limit);
+
+  if (!includeSimulator) query = query.neq("channel", "simulator");
+
+  const { data, error } = await query;
 
   if (error) throw new Error(`listThreads: ${error.message}`);
   if (!data?.length) return [];
@@ -63,6 +81,15 @@ export type ThreadDetail = ThreadSummary & {
   messages: { id: string; role: string; body: string; createdAt: string }[];
   notifiedAt: string | null;
 };
+
+/** How many demo threads are hidden, so the toggle can say. */
+export async function countSimulatorThreads(): Promise<number> {
+  const { count } = await db()
+    .from("conversations")
+    .select("*", { count: "exact", head: true })
+    .eq("channel", "simulator");
+  return count ?? 0;
+}
 
 export async function getThread(id: string): Promise<ThreadDetail | null> {
   const { data: c } = await db()

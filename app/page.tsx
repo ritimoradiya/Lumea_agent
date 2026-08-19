@@ -3,6 +3,7 @@ import LiquidHero from "@/components/LiquidHero";
 import ChatWidget from "@/components/ChatWidget";
 import OpenChatButton from "@/components/OpenChatButton";
 import ProductImage from "@/components/ProductImage";
+import Reveal from "@/components/Reveal";
 import { getCompany, type Product } from "@/lib/company";
 
 const CATEGORY_ORDER = ["Cleanse", "Treat", "Hydrate", "Protect"];
@@ -122,9 +123,9 @@ export default async function Home() {
                 {category}
               </h3>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {items.map((p) => (
+                {items.map((p, i) => (
+                  <Reveal key={p.id} delay={i * 70}>
                   <Link
-                    key={p.id}
                     href={`/products/${p.id}`}
                     className="group flex flex-col rounded-[14px] border hairline bg-white/45
                                p-5 backdrop-blur-sm transition-all duration-500
@@ -132,8 +133,8 @@ export default async function Home() {
                     style={{ transitionTimingFunction: "var(--ease-spring)" }}
                   >
                     <ProductImage
-                      category={p.category}
-                      seed={p.id}
+                      product={p}
+                      compact
                       className="mb-5 h-[150px] w-full rounded-[10px]"
                     />
                     <span className="font-serif text-[18px] leading-tight tracking-[-0.01em]">
@@ -147,6 +148,7 @@ export default async function Home() {
                       <span className="text-faint">{p.details?.Size}</span>
                     </span>
                   </Link>
+                  </Reveal>
                 ))}
               </div>
             </div>
@@ -282,6 +284,19 @@ export default async function Home() {
               >
                 lumea.support01@gmail.com
               </a>
+            </div>
+
+            <div className="rounded-[14px] border hairline bg-white/50 p-6">
+              <h3 className="font-serif text-[19px]">By text</h3>
+              <p className="mt-2.5 text-[13.5px] leading-[1.6] text-muted">
+                Prefer messaging? Try the same assistant in a text thread.
+              </p>
+              <Link
+                href="/demo"
+                className="mt-5 inline-block rounded-full border hairline bg-white/70 px-5 py-2.5 text-[13px]"
+              >
+                Open the thread
+              </Link>
             </div>
 
             <div className="rounded-[14px] border hairline bg-white/50 p-6">

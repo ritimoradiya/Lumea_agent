@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProductImage from "@/components/ProductImage";
+import FloatingProduct from "@/components/FloatingProduct";
 import ChatWidget from "@/components/ChatWidget";
 import AskAboutButton from "@/components/AskAboutButton";
 import { getCompany } from "@/lib/company";
@@ -76,11 +77,9 @@ export default async function ProductPage({
         </p>
 
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
-          <ProductImage
-            category={product.category}
-            seed={product.id}
-            className="w-full rounded-[14px]"
-          />
+          <FloatingProduct>
+            <ProductImage product={product} className="w-full rounded-[14px]" />
+          </FloatingProduct>
 
           <div className="flex flex-col">
             <span className="text-[11px] uppercase tracking-[0.16em] text-faint">
@@ -167,10 +166,10 @@ export default async function ProductPage({
                   style={{ transitionTimingFunction: "var(--ease-spring)" }}
                 >
                   <ProductImage
-                    category={p.category}
-                    seed={p.id}
-                    className="mb-5 h-[130px] w-full rounded-[10px]"
-                  />
+                      product={p}
+                      compact
+                      className="mb-5 h-[130px] w-full rounded-[10px]"
+                    />
                   <span className="font-serif text-[17px] tracking-[-0.01em]">
                     {p.name}
                   </span>

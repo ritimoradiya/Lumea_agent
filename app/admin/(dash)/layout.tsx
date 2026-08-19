@@ -25,7 +25,7 @@ export default async function DashLayout({
           {[
             ["/admin", "Inbox"],
             ["/admin/leads", "Leads"],
-            ["/admin/simulator", "Simulator"],
+            ["/demo", "Try by text"],
           ].map(([href, label]) => (
             <Link
               key={href}
