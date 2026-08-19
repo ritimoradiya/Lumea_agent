@@ -42,6 +42,8 @@ export type TelegramMessage = {
   text: string;
   /** For logging only — never used to identify the conversation. */
   from: string;
+  /** Profile first name, when Telegram supplies one. */
+  firstName?: string;
 };
 
 export type TelegramUpdate = {
@@ -119,5 +121,6 @@ export function extractMessage(update: TelegramUpdate): TelegramMessage | null {
       message.from?.username ??
       message.from?.first_name ??
       String(message.chat.id),
+    firstName: message.from?.first_name,
   };
 }

@@ -93,6 +93,8 @@ async function main() {
           channel: "telegram",
           threadId: String(message.chatId),
           text: message.text,
+          // Telegram gives us a profile name; no need to ask for it.
+          known: message.firstName ? { firstName: message.firstName } : undefined,
         });
 
         if (result.handedToHuman) {

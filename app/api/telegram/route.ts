@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       channel: "telegram",
       threadId: String(message.chatId),
       text: message.text,
+      known: message.firstName ? { firstName: message.firstName } : undefined,
     });
 
     if (!result.handedToHuman) {

@@ -2,7 +2,7 @@ import { getBrain, type ChatMessage } from "./brain";
 import { getCompany, greetingFor, type Company } from "./company";
 import { respond } from "./agent/respond";
 import { generateRoutine } from "./agent/routine";
-import { isLeadComplete } from "./agent/checklist";
+import { isLeadComplete, merge, type Collected } from "./agent/checklist";
 import { sendLeadAlert, sendRoutineToCustomer } from "./email";
 import {
   db,
@@ -29,6 +29,15 @@ export type InboundInput = {
   threadId: string;
   text: string;
   companySlug?: string;
+  /**
+   * Details the transport already knows, which the agent must therefore never
+   * ask for. Email carries the sender's address and usually their name; asking
+   * an emailer for their email address is absurd and reads as broken.
+   *
+   * Merged first-write-wins, so anything the customer states themselves later
+   * is never overwritten by transport metadata.
+   */
+  known?: Collected;
 };
 
 export type InboundResult = {
@@ -65,6 +74,15 @@ export async function handleInbound(
     input.channel,
     input.threadId
   );
+
+  // Fold in whatever the transport handed us before the agent decides what to
+  // ask for, so it never requests something it already has.
+  if (input.known) {
+    conversation.state = {
+      ...conversation.state,
+      collected: merge(conversation.state.collected, input.known),
+    };
+  }
 
   // A person has taken this thread over. Save what the customer said so it
   // appears in the admin inbox, but do not reply — two answers in two voices

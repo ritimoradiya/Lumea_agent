@@ -22,6 +22,26 @@ const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
 
 const EVERY_MS = Number(process.env.EMAIL_POLL_MS ?? 30000);
 
+/**
+ * Turn a From header into known fields.
+ *
+ * Display names are unreliable — often the whole address, sometimes an
+ * initial, sometimes empty — so only a plausible human name is used, and the
+ * surname only when there genuinely is one.
+ */
+function nameFrom(displayName: string, address: string) {
+  const known: Record<string, string> = { email: address.toLowerCase() };
+
+  const clean = displayName.trim();
+  const looksLikeAnAddress = clean.includes("@");
+  if (!clean || looksLikeAnAddress) return known;
+
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts[0] && parts[0].length > 1) known.firstName = parts[0];
+  if (parts.length > 1) known.lastName = parts.slice(1).join(" ");
+  return known;
+}
+
 async function tick() {
   const company = await getCompany();
   const messages = await fetchUnread();
@@ -39,6 +59,9 @@ async function tick() {
         // than a new one per message.
         threadId: email.threadRoot,
         text: email.text,
+        // We already have these from the envelope. Asking someone who just
+        // emailed us for their email address reads as broken.
+        known: nameFrom(email.fromName, email.from),
       });
 
       if (result.handedToHuman) {
