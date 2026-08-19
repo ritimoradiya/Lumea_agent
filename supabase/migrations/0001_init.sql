@@ -1,9 +1,9 @@
 -- ─────────────────────────────────────────────────────────────
---  Initial schema — multi-tenant AI reception agent
+--  Initial schema — Lumea skincare AI reception agent
 --
---  A "company" is a tenant. The agent has no hardcoded knowledge of
---  any business: it reads a company row plus its products and FAQs,
---  and can only speak to what it finds there.
+--  Lumea's brand, products, and FAQs live in the companies /
+--  company_products / company_faqs tables rather than in code, so the
+--  catalogue can be edited without a deploy.
 -- ─────────────────────────────────────────────────────────────
 
 create extension if not exists "pgcrypto";

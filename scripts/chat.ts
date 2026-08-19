@@ -1,14 +1,9 @@
 /**
- * Terminal harness — talk to the agent with no UI in the way.
+ * Terminal harness — talk to the Lumea agent with no UI in the way.
  *
  *   npm run chat
  *
- * Commands:
- *   /state              show what has been collected
- *   /company <slug>     switch tenant mid-session
- *   /companies          list available company profiles
- *   /reset              clear the conversation
- *   /quit
+ * Commands:  /state   /reset   /quit
  */
 
 import { config } from "dotenv";
@@ -20,7 +15,7 @@ import { stdin as input, stdout as output } from "node:process";
 import { getBrain } from "../lib/brain";
 import { respond } from "../lib/agent/respond";
 import { progress, type Collected } from "../lib/agent/checklist";
-import { getCompany, listCompanySlugs, type Company } from "../lib/company";
+import { getCompany, type Company } from "../lib/company";
 import type { ChatMessage } from "../lib/brain";
 
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
@@ -44,21 +39,18 @@ async function main() {
   let history: ChatMessage[] = [];
   let collected: Collected = {};
 
-  const banner = () => {
-    console.log(bold(`\n  ${company.name} — support agent`));
-    console.log(dim(`  ${company.industry}`));
-    console.log(
-      dim(`  brain: ${brain.name}  ·  ${company.products.length} products  ·  ${company.faqs.length} FAQs`)
-    );
-    console.log(dim("  /state  /company <slug>  /companies  /reset  /quit\n"));
-  };
-
-  banner();
+  console.log(bold(`\n  ${company.name} — support agent`));
+  console.log(
+    dim(
+      `  brain: ${brain.name}  ·  ${company.products.length} products  ·  ${company.faqs.length} FAQs`
+    )
+  );
+  console.log(dim("  /state  /reset  /quit\n"));
 
   const rl = readline.createInterface({ input, output });
 
   while (true) {
-    const line = (await rl.question(bold("You  "))).trim();
+    const line = (await rl.question(bold("You    "))).trim();
     if (!line) continue;
 
     if (line === "/quit") break;
@@ -75,36 +67,8 @@ async function main() {
       continue;
     }
 
-    if (line === "/companies") {
-      const slugs = listCompanySlugs();
-      console.log(
-        dim(
-          "  " +
-            slugs
-              .map((s) => (s === company.slug ? green(`${s} (active)`) : s))
-              .join("\n  ") +
-            "\n"
-        )
-      );
-      continue;
-    }
-
-    if (line.startsWith("/company ")) {
-      const slug = line.slice("/company ".length).trim();
-      try {
-        company = await getCompany(slug);
-        history = [];
-        collected = {};
-        console.log(dim("  switched tenant, conversation reset"));
-        banner();
-      } catch (error) {
-        console.log(red(`  ✗ ${(error as Error).message}\n`));
-      }
-      continue;
-    }
-
     const started = Date.now();
-    process.stdout.write(cyan("Bot ") + " ");
+    process.stdout.write(cyan("Lumea") + "  ");
 
     try {
       const result = await respond(
@@ -128,12 +92,11 @@ async function main() {
         .filter(Boolean)
         .join("  ·  ");
 
-      console.log("\n" + dim(`      ${note}`));
-      console.log(
-        result.complete
-          ? green("      ✓ all five details collected — lead ready\n")
-          : ""
-      );
+      console.log("\n" + dim(`       ${note}`));
+      if (result.complete) {
+        console.log(green("       ✓ all five details collected — lead ready"));
+      }
+      console.log("");
     } catch (error) {
       console.log("\n" + red(`  ✗ ${(error as Error).message}\n`));
     }
