@@ -114,10 +114,25 @@ export const ASKS: Ask[] = [
 /** Give up on a required ask after this many attempts. Optional asks get one. */
 const MAX_ATTEMPTS = 2;
 
-/** Fields a lead needs before it counts as complete. Phone is not one. */
-export const REQUIRED_FIELDS: Field[] = ASKS.filter((a) => !a.optional).flatMap(
-  (a) => a.requires
-);
+/**
+ * Fields a lead genuinely cannot do without.
+ *
+ * Stated explicitly rather than derived from the ask list, because deriving
+ * it created a contradiction: an ask is abandoned after two unanswered
+ * attempts, yet the field it fills still gated the lead — so a customer who
+ * ignored one question could never become a lead no matter what else they
+ * gave. A real conversation hit exactly that, handing over name, email, phone
+ * and concern, and producing nothing because the experience question went
+ * unanswered.
+ *
+ * The test is whether you could act on the lead without it. You can follow up
+ * with someone whose experience level you do not know. You cannot follow up
+ * with someone who never gave you an email address.
+ */
+export const REQUIRED_FIELDS: Field[] = ["firstName", "email", "description"];
+
+/** Collected when offered, but never allowed to block a lead. */
+export const BONUS_FIELDS: Field[] = ["lastName", "experience", "phone"];
 
 /** State that has to survive between turns. */
 export type ConversationState = {

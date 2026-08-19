@@ -166,5 +166,12 @@ async function deliverLead(args: {
   await sendRoutineToCustomer(args.company, args.collected, routine);
   await sendLeadAlert(args.company, args.collected, transcript, args.channel);
 
-  await markLeadNotified(lead.id);
+  /**
+   * A dry run must not stamp notified_at. Doing so made a test permanently
+   * block real delivery for that conversation — the lead looked handled when
+   * nothing had actually been sent.
+   */
+  if (process.env.EMAIL_DRY_RUN !== "1") {
+    await markLeadNotified(lead.id);
+  }
 }

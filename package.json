@@ -16,7 +16,8 @@
     "e2e": "tsx scripts/e2e.ts",
     "replay": "tsx scripts/replay.ts",
     "telegram": "tsx scripts/telegram.ts",
-    "email": "tsx scripts/email.ts"
+    "email": "tsx scripts/email.ts",
+    "recover": "tsx scripts/recover.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

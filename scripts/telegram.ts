@@ -46,7 +46,23 @@ async function main() {
     try {
       updates = await getUpdates(offset);
     } catch (error) {
-      console.error(red(`  ✗ ${(error as Error).message}`));
+      const message = (error as Error).message;
+
+      /**
+       * Telegram permits exactly one long poller per bot. Retrying a Conflict
+       * just alternates which instance wins and neither works reliably, so
+       * fail loudly with the actual remedy instead of looping on it.
+       */
+      if (/Conflict/i.test(message)) {
+        console.error(
+          red("\n  ✗ Another copy of this worker is already running.") +
+            dim("\n    Telegram allows only one poller per bot.\n") +
+            dim("    Stop the others with:  pkill -f scripts/telegram\n")
+        );
+        process.exit(1);
+      }
+
+      console.error(red(`  ✗ ${message}`));
       await new Promise((r) => setTimeout(r, 3000));
       continue;
     }
