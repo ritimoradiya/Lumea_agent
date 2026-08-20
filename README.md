@@ -1,17 +1,13 @@
 # Lumea Agent
 
-An AI reception agent for a skincare brand. It answers product questions from a
-fixed catalogue, collects enough to follow someone up, and emails the owner a
-qualified lead — over a website widget, Telegram, and email, as one
-conversation per person rather than three.
+A multi-channel AI customer service agent for a skincare brand. It answers
+product questions from a fixed catalogue, qualifies the enquiry, and delivers
+the lead to the business owner by email.
 
-Lumea is a fictional brand. The interesting part is the engine, not the
-storefront.
+One conversation per customer across three channels: a website widget,
+Telegram, and email. Lumea is a fictional brand; the project is the engine.
 
-**Live: [lumea-agent.netlify.app](https://lumea-agent.netlify.app)**
-
-Nothing needs a laptop switched on. The website and Telegram are served by
-Netlify; the inbox is polled by a scheduled GitHub Action.
+**Live demo — [lumea-agent.netlify.app](https://lumea-agent.netlify.app)**
 
 ```
 You    my skin has been really dry and tight since winter started
@@ -27,27 +23,34 @@ Lumea  Thanks, Ana. Do you already have a daily routine, or would this be
        1239ms · ask · 2/2
 ```
 
-## What it does
+## Features
 
-- Answers from a supplied catalogue and FAQ, and declines anything outside its
-  job rather than improvising
-- Collects a name, an email, and what their skin needs — one question at a time
-- Won't invent a price, a discount, a shipping claim, or medical advice
-- Recognises a returning customer by email, on any channel
-- Streams replies in about a second
+- **Grounded responses.** Answers are drawn from a supplied product catalogue
+  and FAQ. Out-of-scope requests are declined.
+- **Structured qualification.** Captures name, email, and stated need through
+  natural conversation rather than a form.
+- **Guardrails.** Will not quote unlisted prices, offer discounts, make
+  shipping claims, or give medical advice.
+- **Cross-channel identity.** A returning customer is recognised by email
+  address on any channel and is not asked twice.
+- **Automated handoff.** A qualified lead triggers a summary to the owner and a
+  generated routine to the customer.
+- **Streaming responses**, approximately one second per turn.
 
-## Where each channel runs
+## Deployment
 
-| Channel | Runs on | Reply time |
+| Channel | Host | Latency |
 | --- | --- | --- |
 | Web chat | Netlify function | ~1s |
 | Telegram | Netlify webhook | ~1s |
-| Email | Scheduled GitHub Action, every 5 min | within ~10 min |
+| Email | GitHub Actions, 5-minute schedule | ~10 min |
 
-Email is the odd one out because a Netlify function is killed at 30 seconds and
-a scheduled inbox poll never fit. A GitHub Actions job has no such ceiling, and
-minutes are unlimited on a public repository, so the poll runs there — four
-minutes of work, then it exits so the next run can start.
+No always-on machine is required.
+
+Email polling runs on GitHub Actions rather than Netlify because serverless
+functions terminate at 30 seconds, which an IMAP poll cannot reliably complete
+within. Actions imposes no such limit and is unmetered on public repositories.
+Each run polls for four minutes and exits so the next may start.
 
 ## Architecture
 
@@ -58,122 +61,111 @@ minutes of work, then it exits so the next run can start.
                        └──→  Supabase  ──→  lead alert email
 ```
 
-Every channel funnels into one `respond()` call, which is why adding a channel
-is a small job rather than a rewrite.
+All channels converge on a single `respond()` call. Channel adapters handle
+transport only and contain no agent logic, so adding a channel requires no
+change to the conversation engine.
 
-## Design decisions
+## Design
 
-**The code owns the checklist, not the model.** The model is never asked to
-remember what is still outstanding. Each turn, code picks the single next thing
-to ask for and tells the model to ask for that; the model only writes sentences.
-This is why the agent cannot loop, forget, or re-ask for something it already
-has — and why it stays reliable on small models.
+**Deterministic checklist.** Application code tracks which details are
+outstanding and passes a single target to the model each turn. The model
+generates prose only. This prevents loops, duplicate questions, and dropped
+fields, and keeps behaviour stable on smaller models.
 
-The unit is an *ask*, not a field: "may I have your name and email?" is one ask
-filling two, because splitting it reads like a form. Each ask carries a reason,
-and is abandoned after two unanswered attempts rather than repeated.
+**Asks over fields.** The unit of collection is a question, not a database
+column: name and email are requested together. Each carries a stated reason and
+is abandoned after two unanswered attempts.
 
-**A lead is somewhere to write to, plus one thing worth writing about.** Not a
-list of required fields — that formulation silently dropped real customers,
-because whichever field happened to be missing voided the whole lead. Telling
-the owner and writing a routine are separate thresholds: contact details are
-enough for the first, while the second needs to know something about their skin
-or it is filler.
+**Two qualification thresholds.** Notifying the owner requires contact details.
+Generating a routine additionally requires a stated skin concern. Separating
+them prevents both silent drop-off and generic output.
 
-**Contact details are correctable; identity is not.** The split follows how each
-field is read. Emails and phone numbers are found by regex, deterministically,
-so a new valid value in the customer's own message is a correction and the last
-word wins. Names and concerns are inferred by a model, where a later value may
-be a misreading rather than a change of mind, so those are first-write-wins.
+**Field-specific merge policy.** Email and phone are extracted by regex, so a
+new valid value supersedes the old one and corrections are honoured. Names and
+free-text concerns are model-inferred, so the first value is retained to
+prevent misattribution.
 
-**Email is the identity key.** It is the only identifier that travels — a
-Telegram chat id and a browser session id are meaningless outside their own
-channel. The lookup runs before the next question is chosen, or a returning
-customer gets asked for a name already on file.
+**Email as identity key.** The only identifier portable across channels; a
+Telegram chat ID and a browser session ID are channel-local. Identity resolution
+runs before question selection.
 
-**The company is data, not code.** Brand, catalogue, FAQ, and domain guardrails
-live in `config/companies/*.json`; universal rules live in the prompt builder.
-Rebranding means editing one JSON file. The model is swappable the same way —
-`Brain` is a two-method interface, so the same agent runs on Groq or entirely
-offline on Ollama.
+**Configuration over code.** Brand, catalogue, FAQ, and domain-specific rules
+are defined in `config/companies/*.json`. Universal rules live in the prompt
+builder. Re-targeting the agent to another business requires no code change.
+Inference is likewise pluggable through a two-method `Brain` interface, backed
+by either Groq or a local Ollama model.
 
 ## Testing
 
-The guardrails are pure functions in `lib/eval/guardrails.ts`, deliberately
-apart from anything that talks to a model — guardrails you can only check by
-spending tokens get checked rarely.
+Guardrails are implemented as pure functions in `lib/eval/guardrails.ts`,
+isolated from any inference call.
 
-`npm test` runs them against recorded replies: no key, no network, under a
-second, so CI enforces them on every push. Each fixture declares which rules it
-must trip, and about half must trip nothing at all — a rule that fires on a good
-reply is worse than no rule, because the first false positive teaches everyone
-to ignore the suite.
+- `npm test` — evaluates guardrails against recorded responses. No API key, no
+  network, sub-second. Runs in CI on every push.
+- `npm run eval` — applies the same guardrails to live model output across
+  recorded conversations, and additionally asserts response mode and field
+  extraction.
 
-`npm run eval` puts the same functions in front of the live model over recorded
-conversations, and adds what fixtures cannot: whether the agent chose to ask or
-to answer, and whether a detail was actually captured.
-
-Most fixtures are replies that really happened. A guardrail written from
-imagination tends to catch imaginary problems.
+Fixtures assert both positive and negative cases: roughly half must produce no
+violation, which is what prevents false positives from accumulating.
 
 ## Setup
 
 ```bash
 npm install
-cp .env.example .env.local   # then fill in the blanks
-npm run models               # confirm your Groq key and model id
+cp .env.example .env.local   # populate credentials
+npm run models               # verify Groq key and model availability
 npm run chat
 ```
 
-Only `GROQ_API_KEY` is needed to talk to the agent. Supabase, Gmail, and
-Telegram values are needed for persistence and the other channels. For fully
-offline operation, install [Ollama](https://ollama.com), run `ollama pull
+`GROQ_API_KEY` is sufficient for conversation. Supabase, Gmail, and Telegram
+credentials enable persistence and the remaining channels.
+
+For offline inference, install [Ollama](https://ollama.com), run `ollama pull
 qwen2.5:3b`, and set `BRAIN=ollama`.
 
 ## Scripts
 
 | Command | Purpose |
 | --- | --- |
-| `npm run chat` | Talk to the agent in a terminal |
-| `npm test` | Guardrails and checklist. No key, no network, under a second |
-| `npm run eval` | The same guardrails against the live model |
-| `npm run identity` | Proves a customer is recognised across channels |
-| `npm run verify` | Check every external dependency |
-| `npm run recover` | Deliver leads that qualified but never sent |
-| `npm run email` | Poll the inbox now, instead of waiting for the Action |
-| `npm run bench` | Compare models on latency and accuracy |
-| `npx tsx scripts/diag.ts` | Read Groq's rate-limit headers |
+| `npm run chat` | Interactive terminal session |
+| `npm test` | Guardrail and checklist suite — offline, no API key |
+| `npm run eval` | Guardrails against live model output |
+| `npm run identity` | Verifies cross-channel customer recognition |
+| `npm run verify` | Checks all external dependencies |
+| `npm run recover` | Re-delivers qualified leads that failed to send |
+| `npm run email` | Polls the inbox on demand |
+| `npm run bench` | Compares models on latency and extraction accuracy |
+| `npx tsx scripts/diag.ts` | Reports Groq rate-limit headers |
 
-Groq's free tier allows 8,000 tokens a minute, and a turn costs roughly 2,800.
-Every live script paces itself at 20 seconds a turn, because exceeding that
-limit does not fail loudly — the SDK retries with backoff, which looks exactly
-like a slow model.
+The Groq free tier permits 8,000 tokens per minute against roughly 2,800 per
+turn. Live scripts are paced at 20 seconds per turn, as exceeding the limit
+produces transparent SDK retries rather than an error.
 
-## Known limitations
+## Limitations
 
-- Correcting an email **after** the routine has been sent does not resend it.
-  The corrected address does reach the owner in the lead alert.
-- The routine is sent as a fresh email rather than threaded into the customer's
-  thread, so a reply starts a new conversation. Recognition makes that
-  survivable rather than fixing it.
-- Two people sharing one browser tab share one identity.
-- GitHub disables scheduled workflows on a repository with no commits for 60
-  days, which stops the email poll until the next push.
+- An email correction made after routine delivery does not trigger a resend.
+  The corrected address is included in the owner notification.
+- Routine emails are sent as new threads, so customer replies open a new
+  conversation. Identity resolution links them to the existing customer record.
+- Concurrent users sharing a browser session share one conversation identity.
+- GitHub suspends scheduled workflows on repositories inactive for 60 days,
+  pausing email polling until the next commit.
 
 ## Roadmap
 
 - [x] Conversation engine, checklist, extraction, guardrails
-- [x] Supabase persistence, lead alerts, generated routines
-- [x] Web store, twelve product pages, chat widget
-- [x] Admin inbox, lead list, human takeover
-- [x] Three channels, rate limiting, CI, deploy
-- [x] Cross-channel identity, and an evaluation suite over the guardrails
-- [x] Every channel answering with no machine of mine running
-- [ ] Observability: token spend, latency, completion rate by channel
+- [x] Supabase persistence, lead notification, generated routines
+- [x] Storefront, twelve product pages, chat widget
+- [x] Admin inbox, lead management, human handoff
+- [x] Three channels, rate limiting, CI/CD
+- [x] Cross-channel identity and guardrail evaluation suite
+- [x] Unattended operation across all channels
+- [ ] Observability: token spend, latency distribution, completion rate
 
 ## Stack
 
-TypeScript · Next.js · Groq · Ollama · Supabase (Postgres) · Zod · Tailwind
+TypeScript · Next.js · Groq · Ollama · Supabase (Postgres) · Zod · Tailwind CSS
 
 ## License
 
