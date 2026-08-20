@@ -121,18 +121,39 @@ after which the SDK retries with backoff — which reads as 15-second model
 latency but is throttling. `smoke` and `bench` pace themselves for this
 reason, and `diag.ts` exists to tell the two apart.
 
-## Running the channels
+## Where each channel runs
 
-The website is deployed. Two channels run as local workers, each in its own
-terminal:
+| Channel | Runs on | Why |
+| --- | --- | --- |
+| Web chat | Netlify | a request/response handler, well inside limits |
+| Telegram | Netlify | webhook: one HTTP call in, one out |
+| Email | a local worker | see below |
 
 ```bash
-npm run telegram   # long polls Telegram; needs no public URL
 npm run email      # polls the support inbox over IMAP
 ```
 
-Both connect outward, which is why neither needs a tunnel or an exposed port.
-Telegram allows one poller per bot, so only run one copy.
+### Why email cannot run on Netlify
+
+It was tried and removed. A scheduled function polling the inbox times out at
+exactly 30 seconds, every time — that is Netlify's function ceiling. Measured
+locally, an IMAP connect, search and logout against Gmail takes **~60 seconds
+on its own**, with an empty inbox, before the agent or SMTP are involved.
+
+There is no tuning that fits a minute of IMAP into thirty seconds, so email
+runs as a worker on a machine that can hold a connection open. Telegram moved
+to its webhook precisely because it has no such problem: one HTTP request in,
+one out, done in a second.
+
+### Telegram: webhook or polling, never both
+
+```bash
+npm run webhook -- https://your-site.netlify.app   # deployed site answers
+npm run webhook -- --off                           # back to local polling
+npm run telegram                                   # local polling
+```
+
+Registering a webhook stops `getUpdates` working, which is intentional.
 
 | Command | Purpose |
 | --- | --- |
