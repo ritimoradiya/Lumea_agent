@@ -18,7 +18,8 @@
     "telegram": "tsx scripts/telegram.ts",
     "email": "tsx scripts/email.ts",
     "recover": "tsx scripts/recover.ts",
-    "webhook": "tsx scripts/webhook.ts"
+    "webhook": "tsx scripts/webhook.ts",
+    "identity": "tsx scripts/identity.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

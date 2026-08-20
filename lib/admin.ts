@@ -80,6 +80,14 @@ export async function listThreads(
 export type ThreadDetail = ThreadSummary & {
   messages: { id: string; role: string; body: string; createdAt: string }[];
   notifiedAt: string | null;
+  /**
+   * Other conversations by the same person, newest first.
+   *
+   * A returning customer is the single most useful thing to know before
+   * replying, and until now the inbox showed four separate threads with no
+   * hint they were one person. Empty for anyone we have only met once.
+   */
+  alsoSeenOn: { channel: string; updatedAt: string }[];
 };
 
 /** How many demo threads are hidden, so the toggle can say. */
@@ -94,7 +102,7 @@ export async function countSimulatorThreads(): Promise<number> {
 export async function getThread(id: string): Promise<ThreadDetail | null> {
   const { data: c } = await db()
     .from("conversations")
-    .select("id, channel, channel_thread_id, status, collected, updated_at")
+    .select("id, channel, channel_thread_id, status, collected, updated_at, contact_id")
     .eq("id", id)
     .maybeSingle();
   if (!c) return null;
@@ -111,6 +119,25 @@ export async function getThread(id: string): Promise<ThreadDetail | null> {
     .eq("conversation_id", id)
     .maybeSingle();
 
+  // Everywhere else we have spoken to this person. Two queries rather than a
+  // join because the contact link is nullable — most threads have no contact
+  // yet, and those skip the second query entirely.
+  let alsoSeenOn: ThreadDetail["alsoSeenOn"] = [];
+  if (c.contact_id) {
+    const { data: siblings } = await db()
+      .from("conversations")
+      .select("channel, updated_at")
+      .eq("contact_id", c.contact_id)
+      .neq("id", id)
+      .order("updated_at", { ascending: false })
+      .limit(8);
+
+    alsoSeenOn = (siblings ?? []).map((s) => ({
+      channel: s.channel as string,
+      updatedAt: s.updated_at as string,
+    }));
+  }
+
   const collected = (c.collected ?? {}) as Collected;
 
   return {
@@ -124,6 +151,7 @@ export async function getThread(id: string): Promise<ThreadDetail | null> {
     preview: "",
     updatedAt: c.updated_at as string,
     notifiedAt: (lead?.notified_at as string | null) ?? null,
+    alsoSeenOn,
     messages: (messages ?? []).map((m) => ({
       id: m.id as string,
       role: m.role as string,

@@ -8,6 +8,8 @@ import { checkLimits } from "./limits";
 import {
   db,
   createLeadIfNew,
+  recogniseByEmail,
+  rememberContact,
   isLeadNotified,
   loadConversation,
   markLeadNotified,
@@ -43,6 +45,8 @@ export type InboundInput = {
 
 export type InboundResult = {
   reply: string;
+  /** True when this turn matched a customer we had seen before. */
+  recognised: boolean;
   /** True when a limit was hit and the reply is a holding message. */
   limited: boolean;
   /** True when a person has taken over and the agent deliberately stayed quiet. */
@@ -104,6 +108,7 @@ export async function handleInbound(
 
     return {
       reply: verdict.message,
+      recognised: false,
       limited: true,
       handedToHuman: false,
       greeting: null,
@@ -127,6 +132,7 @@ export async function handleInbound(
 
     return {
       reply: "",
+      recognised: false,
       limited: false,
       handedToHuman: true,
       greeting: null,
@@ -143,11 +149,38 @@ export async function handleInbound(
       history: conversation.history,
       state: conversation.state,
       customerMessage: input.text,
+      /**
+       * Recognises someone by an address seen on any channel. Passed in as a
+       * function so respond() never touches the database and stays testable.
+       */
+      recogniseBy: async (email) => {
+        const contact = await recogniseByEmail(companyId, email);
+        if (contact) {
+          console.log(
+            `[identity] ${email} matched an existing contact ` +
+              `(${contact.priorConversations} prior conversation${contact.priorConversations === 1 ? "" : "s"})`
+          );
+        }
+        return contact?.known ?? null;
+      },
     },
     onToken
   );
 
   await saveTurn(conversation.id, input.text, result.reply, result.state);
+
+  /**
+   * Record the person, not just the conversation.
+   *
+   * This is what makes the same customer across four channels one row rather
+   * than four, and it is why the next conversation can recognise them. It runs
+   * after the reply so a failure here never costs the customer their answer.
+   */
+  try {
+    await rememberContact(companyId, conversation.id, result.state.collected);
+  } catch (error) {
+    console.error(`[identity] ${(error as Error).message}`);
+  }
 
   // Fire-and-forget the follow-up work. The customer already has their
   // reply; making them wait on a routine being written and two SMTP
@@ -173,6 +206,7 @@ export async function handleInbound(
 
   return {
     reply: result.reply,
+    recognised: result.recognised,
     limited: false,
     handedToHuman: false,
     // Only on a thread's first message, so the widget can show it above the reply.

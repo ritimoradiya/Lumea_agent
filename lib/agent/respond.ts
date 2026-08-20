@@ -20,6 +20,15 @@ export type RespondInput = {
   history: ChatMessage[];
   state: ConversationState;
   customerMessage: string;
+  /**
+   * Looks a customer up by email once one becomes known.
+   *
+   * Injected rather than called directly so this function stays pure and
+   * testable — it never touches the database itself. The lookup has to happen
+   * BEFORE the ask is chosen, or a returning customer gets asked for the name
+   * we already have on file.
+   */
+  recogniseBy?: (email: string) => Promise<Collected | null>;
 };
 
 export type RespondResult = {
@@ -32,6 +41,8 @@ export type RespondResult = {
   learned: Collected;
   /** What the agent chose to do, for debugging the flow. */
   mode: PromptMode["kind"];
+  /** True when this turn matched them to an existing contact. */
+  recognised: boolean;
 };
 
 /**
@@ -55,7 +66,21 @@ export async function respond(
     askedFor: previousAsk?.label ?? null,
     alreadyHave: state.collected,
   });
-  const collected = merge(state.collected, learned);
+  let collected = merge(state.collected, learned);
+
+  /**
+   * A returning customer, recognised the moment they give an address we have
+   * seen on any channel. Merged first-write-wins, so anything they said in
+   * this conversation still beats what we knew before.
+   */
+  let recognised = false;
+  if (input.recogniseBy && learned.email && !state.collected.email?.trim()) {
+    const known = await input.recogniseBy(learned.email);
+    if (known) {
+      collected = merge(collected, known);
+      recognised = true;
+    }
+  }
 
   // Two reasons to ask for nothing this turn.
   //
@@ -119,5 +144,6 @@ export async function respond(
     complete: isLeadComplete(collected),
     learned,
     mode: mode.kind,
+    recognised,
   };
 }

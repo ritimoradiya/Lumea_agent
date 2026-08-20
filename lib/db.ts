@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Company } from "./company";
-import type { ConversationState } from "./agent/checklist";
+import type { Collected, ConversationState } from "./agent/checklist";
 import { emptyState } from "./agent/checklist";
 
 /**
@@ -268,4 +268,119 @@ export async function isLeadNotified(leadId: string): Promise<boolean> {
     .eq("id", leadId)
     .single();
   return Boolean(data?.notified_at);
+}
+
+export type ContactRecord = {
+  id: string;
+  /** What we already knew about this person from earlier conversations. */
+  known: Collected;
+  /** Conversations they have had before this one, on any channel. */
+  priorConversations: number;
+};
+
+/**
+ * Recognise someone by their email address, across every channel.
+ *
+ * This is what makes a customer who chatted on the website and emailed a week
+ * later the same person rather than two strangers. Email is the key because it
+ * is the only identifier that travels: a Telegram chat id and a browser
+ * session id are meaningless outside their own channel.
+ *
+ * Returns null for an address never seen before, which the caller treats as a
+ * new contact rather than an error.
+ */
+export async function recogniseByEmail(
+  companyId: string,
+  email: string
+): Promise<ContactRecord | null> {
+  const supabase = db();
+  const address = email.trim().toLowerCase();
+
+  const { data: contact } = await supabase
+    .from("contacts")
+    .select("id, first_name, last_name, phone")
+    .eq("company_id", companyId)
+    .ilike("email", address)
+    .maybeSingle();
+
+  if (!contact) return null;
+
+  const { count } = await supabase
+    .from("conversations")
+    .select("*", { count: "exact", head: true })
+    .eq("contact_id", contact.id);
+
+  const known: Collected = {};
+  if (contact.first_name) known.firstName = contact.first_name as string;
+  if (contact.last_name) known.lastName = contact.last_name as string;
+  if (contact.phone) known.phone = contact.phone as string;
+
+  return {
+    id: contact.id as string,
+    known,
+    priorConversations: count ?? 0,
+  };
+}
+
+/**
+ * Record what we now know about this person, and attach the conversation.
+ *
+ * Upserted on (company_id, email) so the same customer across four channels is
+ * one row rather than four. Only fills blanks — a detail already on file is
+ * never overwritten by a later guess, for the same reason the checklist is
+ * first-write-wins.
+ */
+export async function rememberContact(
+  companyId: string,
+  conversationId: string,
+  collected: Collected
+): Promise<string | null> {
+  if (!collected.email?.trim()) return null;
+
+  const supabase = db();
+  const address = collected.email.trim().toLowerCase();
+
+  const existing = await recogniseByEmail(companyId, address);
+
+  const fields = {
+    first_name: collected.firstName ?? existing?.known.firstName ?? null,
+    last_name: collected.lastName ?? existing?.known.lastName ?? null,
+    phone: collected.phone ?? existing?.known.phone ?? null,
+  };
+
+  let contactId = existing?.id;
+
+  if (contactId) {
+    await supabase.from("contacts").update(fields).eq("id", contactId);
+  } else {
+    /**
+     * Insert rather than upsert. The uniqueness index is on lower(email),
+     * which is a functional index and cannot satisfy ON CONFLICT (company_id,
+     * email) — Postgres needs a constraint on those exact columns for that.
+     *
+     * We have just looked the address up, so a collision here means two
+     * messages from the same new customer arrived at once. Re-reading resolves
+     * it, which is cheaper and clearer than reshaping the schema.
+     */
+    const { data, error } = await supabase
+      .from("contacts")
+      .insert({ company_id: companyId, email: address, ...fields })
+      .select("id")
+      .single();
+
+    if (error) {
+      const raced = await recogniseByEmail(companyId, address);
+      if (!raced) throw new Error(`rememberContact: ${error.message}`);
+      contactId = raced.id;
+    } else {
+      contactId = data.id as string;
+    }
+  }
+
+  await supabase
+    .from("conversations")
+    .update({ contact_id: contactId })
+    .eq("id", conversationId);
+
+  return contactId;
 }

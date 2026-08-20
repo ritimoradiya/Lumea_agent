@@ -217,6 +217,39 @@ export default async function InboxPage({
               </div>
             ))}
 
+            {/* Same person, met elsewhere. Only shown when true. */}
+            {selected.alsoSeenOn.length > 0 && (
+              <>
+                <h2 className="mt-7 mb-3 text-[10.5px] uppercase tracking-[0.14em] text-faint">
+                  Returning customer
+                </h2>
+                <p className="mb-2.5 text-[12.5px] leading-relaxed text-muted">
+                  Matched by email to{" "}
+                  {selected.alsoSeenOn.length === 1
+                    ? "one earlier conversation"
+                    : `${selected.alsoSeenOn.length} earlier conversations`}
+                  .
+                </p>
+                <ul className="space-y-1.5">
+                  {selected.alsoSeenOn.map((prior, i) => (
+                    <li
+                      key={`${prior.channel}-${i}`}
+                      className="flex items-center gap-2 text-[12.5px]"
+                    >
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10.5px] ${
+                          CHANNEL_STYLE[prior.channel] ?? "bg-stone text-muted"
+                        }`}
+                      >
+                        {prior.channel}
+                      </span>
+                      <span className="text-faint">{ago(prior.updatedAt)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
             <h2 className="mt-7 mb-3 text-[10.5px] uppercase tracking-[0.14em] text-faint">
               Delivery
             </h2>
