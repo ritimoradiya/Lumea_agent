@@ -10,6 +10,20 @@
   # way: the build needs TypeScript and Tailwind.
   NPM_FLAGS = "--include=dev"
 
+  # Secrets scanning stays ON. These two exclusions are surgical, so a real
+  # credential appearing in served output would still fail the build.
+  #
+  # The model ids are not secrets. "openai/gpt-oss-120b" is a public
+  # identifier that necessarily appears in the source as a default, in the
+  # README, and in the benchmark script. Marking them secret in the Netlify UI
+  # was a mistake on import.
+  SECRETS_SCAN_OMIT_KEYS = "GROQ_MODEL,GROQ_FALLBACK_MODEL"
+
+  # Turbopack's build cache captures env values while compiling. It is a build
+  # artifact kept to speed up rebuilds — never served, never in a function
+  # bundle. The deployed output is still scanned.
+  SECRETS_SCAN_OMIT_PATHS = ".next/cache/**,.netlify/.next/cache/**"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
