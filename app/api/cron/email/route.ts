@@ -1,4 +1,3 @@
-import { fetchUnread, markHandled, replyToEmail } from "@/lib/channels/email";
 import { handleInbound } from "@/lib/handle";
 import { getCompany } from "@/lib/company";
 
@@ -39,33 +38,51 @@ export async function POST(request: Request) {
     return new Response("forbidden", { status: 403 });
   }
 
+  /**
+   * Imported inside the handler on purpose.
+   *
+   * imapflow opens a raw TLS socket and is the kind of Node library that may
+   * not survive serverless bundling. At module scope a failure to load crashes
+   * the function before any of our code runs, and the platform returns a bare
+   * 502 with no detail. In here, we can report what actually went wrong.
+   */
+  let email!: typeof import("@/lib/channels/email");
+  try {
+    email = await import("@/lib/channels/email");
+  } catch (error) {
+    return Response.json(
+      { ok: false, stage: "import", error: (error as Error).message },
+      { status: 500 }
+    );
+  }
+
   const company = await getCompany();
   const handled: string[] = [];
   const failed: string[] = [];
 
   try {
-    for (const email of await fetchUnread()) {
+    for (const message of await email.fetchUnread()) {
       try {
         const result = await handleInbound({
           channel: "email",
-          threadId: email.threadRoot,
-          text: email.text,
-          known: knownFrom(email.fromName, email.from),
+          threadId: message.threadRoot,
+          text: message.text,
+          known: knownFrom(message.fromName, message.from),
         });
 
         if (!result.handedToHuman) {
-          await replyToEmail(email, result.reply, company.name);
+          await email.replyToEmail(message, result.reply, company.name);
         }
         // Only after the reply is away, so a failure leaves it unread to retry.
-        await markHandled(email.uid);
-        handled.push(email.from);
+        await email.markHandled(message.uid);
+        handled.push(message.from);
       } catch (error) {
-        failed.push(`${email.from}: ${(error as Error).message}`);
+        failed.push(`${message.from}: ${(error as Error).message}`);
       }
     }
   } catch (error) {
     return Response.json(
-      { ok: false, error: (error as Error).message },
+      { ok: false, stage: "poll", error: (error as Error).message },
       { status: 500 }
     );
   }
