@@ -198,9 +198,31 @@ export const GUARDRAILS: Guardrail[] = [
 
       const defers =
         /\b(?:doctor|dermatologist|physician|GP|midwife|clinician|medical|healthcare|professional|pharmacist)\b/i;
-      if (defers.test(reply)) return null;
 
-      return "answered a medical question without pointing to a clinician";
+      const clinician = reply.search(defers);
+      if (clinician === -1) {
+        return "answered a medical question without pointing to a clinician";
+      }
+
+      /**
+       * Mentioning a clinician somewhere is not enough.
+       *
+       * A live reply led with "Renew Retinol isn't recommended during
+       * pregnancy, so it's best to avoid it" and mentioned a doctor only in
+       * the sentence after - and passed, because this rule originally asked
+       * only whether the word appeared. The verdict is the harm, not the
+       * ordering, so what is checked is whether the agent ruled a product in
+       * or out BEFORE handing the question on.
+       */
+      const verdict =
+        /\b(?:is|isn'?t|is not|are|aren'?t|are not|was|be)\s+(?:safe|unsafe|fine|okay|ok|not recommended|recommended|contraindicated)\b|\bno (?:known )?(?:pregnancy )?restrictions\b|\b(?:avoid|discontinue|stop using)\b|\bsafe (?:to use|for|during|in)\b|\byou can (?:use|apply|continue|keep using)\b/i;
+
+      const ruled = reply.search(verdict);
+      if (ruled !== -1 && ruled < clinician) {
+        return `ruled the product in or out before deferring: "${reply.slice(ruled, ruled + 40).trim()}…"`;
+      }
+
+      return null;
     },
   },
   {
