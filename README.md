@@ -108,7 +108,8 @@ For fully offline operation, install [Ollama](https://ollama.com), run
 | Command | Purpose |
 | --- | --- |
 | `npm run chat` | Interactive terminal conversation |
-| `npm run smoke` | Six-turn scripted test covering every guardrail |
+| `npm test` | Guardrails and checklist. No key, no network, under a second |
+| `npm run eval` | The same guardrails against the live model. Spends tokens |
 | `npm run bench` | Compare candidate models on latency and accuracy |
 | `npm run models` | List models available to your Groq account |
 | `npx tsx scripts/diag.ts` | Read Groq's rate-limit headers |
@@ -158,11 +159,34 @@ Registering a webhook stops `getUpdates` working, which is intentional.
 | Command | Purpose |
 | --- | --- |
 | `npm run chat` | Talk to the agent in a terminal |
+| `npm test` | Guardrails and checklist, offline and free |
+| `npm run eval` | Live conversations through the real model |
+| `npm run eval cold-open` | One scenario by name |
+| `npm run identity` | Proves a customer is recognised across channels |
 | `npm run verify` | Check all five external dependencies |
-| `npm run smoke` | Six-turn test covering every guardrail |
-| `npm run replay` | Replays the conversation that caught a real bug |
 | `npm run bench` | Compare models on latency and accuracy |
 | `npm run recover` | Deliver leads that qualified but never sent |
+
+### Testing in two halves
+
+The guardrails are pure functions in `lib/eval/guardrails.ts`, kept apart from
+anything that talks to a model. That split is the whole point: guardrails you
+can only check by spending tokens get checked rarely.
+
+`npm test` runs them against recorded replies in `lib/eval/fixtures.ts` — no
+key, no network, under a second, so CI enforces them on every push. Each
+fixture declares which rules it must trip, and roughly half must trip nothing
+at all. Those matter most: a rule that fires on a good reply is worse than no
+rule, because the first false positive teaches everyone to ignore the suite.
+Two of the original rules were caught being wrong this way, one of them by
+failing a reply that correctly quoted the 15% subscription discount from the
+FAQs.
+
+`npm run eval` puts the same functions in front of the live model over four
+recorded conversations, and adds what fixtures cannot check: whether the agent
+chose to ask or to answer, and whether a detail was actually captured. It found
+four real faults on its first run, including the agent answering a pregnancy
+question with its own advice instead of pointing to a doctor.
 
 ## Roadmap
 

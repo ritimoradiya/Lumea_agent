@@ -1,0 +1,208 @@
+/**
+ * The free test suite.
+ *
+ *   npm test
+ *
+ * No API key, no network, no tokens, under a second. Every guardrail is
+ * checked against recorded replies in both directions: it must catch every
+ * bad one and clear every good one.
+ *
+ * This is deliberately the suite that runs on every push. `npm run eval`
+ * puts the same guardrails in front of the live model, which costs tokens
+ * and so runs on request.
+ */
+import { config } from "dotenv";
+config({ path: ".env.local", override: true });
+
+import { GUARDRAILS, inspect, sentenceCount } from "../lib/eval/guardrails";
+import { FIXTURES } from "../lib/eval/fixtures";
+import { getCompany } from "../lib/company";
+import {
+  ASKS,
+  askLabel,
+  merge,
+  nextAsk,
+  isLeadComplete,
+  REQUIRED_FIELDS,
+} from "../lib/agent/checklist";
+
+const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
+const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
+const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
+const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
+
+let passed = 0;
+const failures: string[] = [];
+
+function check(name: string, condition: boolean, detail = "") {
+  if (condition) {
+    passed++;
+  } else {
+    failures.push(`${name}${detail ? ` — ${detail}` : ""}`);
+    console.log(red(`  ✗ ${name}`) + (detail ? dim(`\n      ${detail}`) : ""));
+  }
+}
+
+async function main() {
+  const company = await getCompany();
+
+  /* ── 1. guardrails against recorded replies ─────────────────────── */
+  console.log(bold("\n  guardrails"));
+
+  for (const f of FIXTURES) {
+    const fired = inspect(f.reply, {
+      company,
+      known: f.known,
+      said: f.said,
+    }).map((v) => v.guardrail);
+    const expected = [...f.trips].sort();
+    const actual = [...fired].sort();
+
+    const missed = expected.filter((id) => !actual.includes(id));
+    const spurious = actual.filter((id) => !expected.includes(id));
+
+    check(
+      f.name,
+      missed.length === 0 && spurious.length === 0,
+      [
+        missed.length ? `did not catch: ${missed.join(", ")}` : "",
+        spurious.length ? `false positive: ${spurious.join(", ")}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    );
+  }
+
+  /* ── 2. every guardrail is actually exercised ───────────────────── */
+  console.log(bold("\n  coverage"));
+  const exercised = new Set(FIXTURES.flatMap((f) => f.trips));
+  for (const g of GUARDRAILS) {
+    check(
+      `${g.id} has a fixture that trips it`,
+      exercised.has(g.id),
+      "a guardrail nothing tests is a guardrail nobody knows is broken"
+    );
+  }
+
+  /* ── 3. sentence counting ───────────────────────────────────────── */
+  console.log(bold("\n  sentence counting"));
+  const SENTENCES: [string, number][] = [
+    ["One sentence.", 1],
+    ["Two things. And another.", 2],
+    ["No trailing period", 1],
+    ["Costs $24.50 in total.", 1],
+    ["Use it e.g. at night.", 1],
+    ["Wait... then apply.", 2],
+    ["Really? Yes! Fine.", 3],
+  ];
+  for (const [text, want] of SENTENCES) {
+    const got = sentenceCount(text);
+    check(`"${text}" is ${want}`, got === want, got !== want ? `got ${got}` : "");
+  }
+
+  /* ── 4. the checklist, which is what stops loops ────────────────── */
+  console.log(bold("\n  checklist"));
+
+  check(
+    "contact is asked for first",
+    ASKS[0].id === "contact",
+    "otherwise wrap-up arrives before we ever have an address"
+  );
+
+  check(
+    "nothing outstanding once every ask is satisfied",
+    nextAsk(
+      {
+        firstName: "P",
+        email: "p@e.com",
+        description: "dry",
+        experience: "first time",
+      },
+      {}
+    ) === null
+  );
+
+  check(
+    "an exhausted ask is skipped rather than repeated forever",
+    nextAsk({}, { contact: 3, concern: 2, experience: 2 }) === null,
+    "this is the loop guard"
+  );
+
+  const contact = ASKS[0];
+  check(
+    "a half-answered ask asks only for the missing half",
+    askLabel(contact, { firstName: "Priya" }) ===
+      contact.partialLabels?.email,
+    `got "${askLabel(contact, { firstName: "Priya" })}"`
+  );
+
+  check(
+    "an untouched ask uses its full phrasing",
+    askLabel(contact, {}) === contact.label
+  );
+
+  check(
+    "first write wins, so a later guess cannot overwrite identity",
+    merge({ firstName: "Priya" }, { firstName: "Someone" }).firstName === "Priya"
+  );
+
+  check(
+    "a follow-up question cannot rewrite the stated concern",
+    merge({ description: "dry skin" }, { description: "asks about retinol" })
+      .description === "dry skin",
+    "a real conversation was rewritten this way"
+  );
+
+  check(
+    "a blank incoming value never erases what we have",
+    merge({ email: "p@e.com" }, { email: "   " }).email === "p@e.com"
+  );
+
+  check(
+    "a lead completes without the optional fields",
+    isLeadComplete({ firstName: "P", email: "p@e.com", description: "dry" }),
+    "experience once blocked leads it had no business blocking"
+  );
+
+  check(
+    "a lead is not complete without an address",
+    !isLeadComplete({ firstName: "P", description: "dry" })
+  );
+
+  check(
+    "phone is never required",
+    !REQUIRED_FIELDS.includes("phone"),
+    "there is no channel that could use it"
+  );
+
+  /* ── 5. the catalogue the agent is allowed to talk about ────────── */
+  console.log(bold("\n  catalogue"));
+
+  check("every product has a price", company.products.every((p) => p.price));
+  check(
+    "product ids are unique",
+    new Set(company.products.map((p) => p.id)).size === company.products.length
+  );
+  check("there are FAQs to answer from", company.faqs.length > 0);
+  check(
+    "a contact route exists for handing off",
+    Boolean(company.contact?.email)
+  );
+
+  /* ── verdict ────────────────────────────────────────────────────── */
+  const total = passed + failures.length;
+  console.log("");
+  if (failures.length === 0) {
+    console.log(green(`  ✓ ${total} checks passed\n`));
+    process.exit(0);
+  }
+  console.log(red(`  ✗ ${failures.length} of ${total} failed\n`));
+  for (const f of failures) console.log(red(`    ${f}`));
+  console.log("");
+  process.exit(1);
+}
+
+main().catch((e) => {
+  console.error(red(`\n✗ ${e.message}\n`));
+  process.exit(1);
+});

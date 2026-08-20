@@ -26,6 +26,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Free, offline and under a second. The guardrails are pure functions
+      # checked against recorded replies, so the rules that keep the agent
+      # honest are enforced on every push rather than once a week.
+      - name: Guardrails and checklist
+        run: npm test
+
       # Builds with placeholder secrets. The point is to catch compile and
       # prerender errors — nothing here talks to a real service, and putting
       # real keys in CI to build a static page would be a needless risk.

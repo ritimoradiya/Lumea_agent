@@ -105,6 +105,10 @@ Rules:
   a price, shipping, or safety is NOT a description — return null for those.
 - "experience" is their skincare experience level, ONLY if they indicate it.
   Use one of exactly: "first time", "some experience", "daily routine".
+  People say this indirectly and it still counts: "building from scratch",
+  "starting fresh", "never used anything before" and "total beginner" are all
+  "first time"; "I've had a routine for years" and "comfortable with actives"
+  are "daily routine".
 - A full name splits into firstName and lastName.
 - Never invent a placeholder like "John Doe" or "unknown".${
     options.askedFor
