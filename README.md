@@ -7,9 +7,14 @@ several channels, then hands a qualified lead to a human.
 Lumea is a fictional brand built for this project — the interesting part
 is the engine, not the storefront.
 
-> **Status: in progress.** The conversation engine works and is tested.
-> The web UI, admin panel, Telegram, and email channels are not built yet.
-> See [Roadmap](#roadmap).
+**Live: [lumea-agent.netlify.app](https://lumea-agent.netlify.app)**
+
+- [The store](https://lumea-agent.netlify.app) — twelve products, chat widget bottom-right
+- [Try it as a text thread](https://lumea-agent.netlify.app/demo) — no phone number needed
+
+> The website is deployed. The email and Telegram workers run locally rather
+> than on Netlify, so those two channels answer only while a laptop is running
+> them — see [Running the channels](#running-the-channels).
 
 ## What works today
 
@@ -116,16 +121,41 @@ after which the SDK retries with backoff — which reads as 15-second model
 latency but is throttling. `smoke` and `bench` pace themselves for this
 reason, and `diag.ts` exists to tell the two apart.
 
+## Running the channels
+
+The website is deployed. Two channels run as local workers, each in its own
+terminal:
+
+```bash
+npm run telegram   # long polls Telegram; needs no public URL
+npm run email      # polls the support inbox over IMAP
+```
+
+Both connect outward, which is why neither needs a tunnel or an exposed port.
+Telegram allows one poller per bot, so only run one copy.
+
+| Command | Purpose |
+| --- | --- |
+| `npm run chat` | Talk to the agent in a terminal |
+| `npm run verify` | Check all five external dependencies |
+| `npm run smoke` | Six-turn test covering every guardrail |
+| `npm run replay` | Replays the conversation that caught a real bug |
+| `npm run bench` | Compare models on latency and accuracy |
+| `npm run recover` | Deliver leads that qualified but never sent |
+
 ## Roadmap
 
 - [x] Conversation engine, checklist, extraction, guardrails
-- [ ] Persist conversations and leads to Supabase
-- [ ] Web store page and chat widget
-- [ ] Admin inbox, lead list, and SMS simulator
-- [ ] Telegram channel
-- [ ] Email channel with correct threading
-- [ ] Lead alert emails
-- [ ] CI/CD and deploy
+- [x] Persist conversations and leads to Supabase
+- [x] Lead alert emails and a generated routine for the customer
+- [x] Web store, twelve product pages, chat widget
+- [x] Admin inbox, lead list, human takeover
+- [x] Telegram channel
+- [x] Email channel with correct threading
+- [x] Rate limiting, CI, and deploy
+- [ ] Cross-channel identity — recognise a returning customer by email
+- [ ] An evaluation suite over the guardrails
+- [ ] Observability: token spend, latency, completion rate by channel
 
 ## Stack
 
