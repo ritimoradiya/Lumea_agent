@@ -12,6 +12,14 @@ import { getCompany, greetingFor } from "@/lib/company";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * Well above what a turn needs — replies stream in about a second. The default
+ * on Vercel's free tier is ten seconds, which a slow first token plus a model
+ * fallback could conceivably exceed, and the customer would see the stream cut
+ * off rather than an error.
+ */
+export const maxDuration = 30;
+
 const Body = z.object({
   threadId: z.string().min(8).max(120),
   text: z.string().min(1).max(2000),

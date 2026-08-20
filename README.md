@@ -7,7 +7,7 @@ the lead to the business owner by email.
 One conversation per customer across three channels: a website widget,
 Telegram, and email. Lumea is a fictional brand; the project is the engine.
 
-**Live demo — [lumea-agent.netlify.app](https://lumea-agent.netlify.app)**
+**Live demo — [lumea-agent.vercel.app](https://lumea-agent.vercel.app)**
 
 ```
 You    my skin has been really dry and tight since winter started
@@ -41,16 +41,16 @@ Lumea  Thanks, Ana. Do you already have a daily routine, or would this be
 
 | Channel | Host | Latency |
 | --- | --- | --- |
-| Web chat | Netlify function | ~1s |
-| Telegram | Netlify webhook | ~1s |
+| Web chat | Vercel function | ~1s |
+| Telegram | Vercel webhook | ~1s |
 | Email | GitHub Actions, 5-minute schedule | ~10 min |
 
 No always-on machine is required.
 
-Email polling runs on GitHub Actions rather than Netlify because serverless
-functions terminate at 30 seconds, which an IMAP poll cannot reliably complete
-within. Actions imposes no such limit and is unmetered on public repositories.
-Each run polls for four minutes and exits so the next may start.
+Email polling runs on GitHub Actions rather than as a scheduled serverless
+function, which terminates well before an IMAP poll can reliably complete.
+Actions imposes no such limit and is unmetered on public repositories. Each run
+polls for four minutes and exits so the next may start.
 
 ## Architecture
 

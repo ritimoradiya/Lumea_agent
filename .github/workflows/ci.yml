@@ -1,7 +1,7 @@
 name: CI
 
 # Runs on every push and pull request. Catches a broken build before it
-# reaches Netlify rather than after.
+# reaches production rather than after.
 on:
   push:
     branches: [main]

@@ -1,7 +1,7 @@
 /**
  * Point Telegram at the deployed site instead of polling from a laptop.
  *
- *   npm run webhook -- https://lumea-agent.netlify.app
+ *   npm run webhook -- https://lumea-agent.vercel.app
  *   npm run webhook -- --off        back to local polling
  *
  * Telegram allows a webhook OR getUpdates, never both. Registering one stops
@@ -32,7 +32,7 @@ async function main() {
   if (!base?.startsWith("https://")) {
     console.error(
       red("\n  ✗ Give the deployed base URL, e.g.\n") +
-        dim("    npm run webhook -- https://lumea-agent.netlify.app\n")
+        dim("    npm run webhook -- https://lumea-agent.vercel.app\n")
     );
     process.exit(1);
   }

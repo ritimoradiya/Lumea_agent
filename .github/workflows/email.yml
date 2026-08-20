@@ -2,11 +2,12 @@ name: Email
 
 # Answers mail sent to the Lumea inbox with nobody's laptop switched on.
 #
-# This exists because the poll cannot live on Netlify. Checking Gmail over
-# IMAP - connect, search, log out - takes about sixty seconds, and Netlify
-# kills any function at thirty. It is not a code problem; the work simply does
-# not fit in the box. A GitHub Actions job has no such ceiling, and minutes are
-# unlimited on a public repository.
+# This exists because the poll cannot live in a serverless function. Those are
+# killed at thirty seconds, and a scheduled poll failed at exactly 30.3s every
+# time. IMAP itself is not slow - measured directly it takes 1.7 to 11.4
+# seconds - so the cost was the sandbox's cold start, not the protocol. A
+# GitHub Actions job has no such ceiling, and minutes are unlimited on a public
+# repository.
 #
 # Every five minutes is the tightest schedule cron allows. GitHub also runs
 # these on a best-effort basis and can be minutes late when it is busy, so
