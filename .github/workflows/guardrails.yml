@@ -1,0 +1,37 @@
+name: Guardrails
+
+# The agent's guardrails are prompt-level, so they can regress from a wording
+# change with nothing failing to compile. This runs the real conversations
+# that caught real bugs.
+#
+# Needs live API keys and spends tokens, so it is manual and scheduled rather
+# than on every push — Groq's free tier is ~170 turns a day and CI should not
+# eat the budget a demo depends on.
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays at 06:00 UTC.
+    - cron: "0 6 * * 1"
+
+jobs:
+  behaviour:
+    runs-on: ubuntu-latest
+    # Skips cleanly on a fork or before secrets are configured, instead of
+    # failing with a confusing auth error.
+    if: github.event_name == 'workflow_dispatch' || github.repository_owner != ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Never promises email it cannot send
+        run: npm run replay
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: openai/gpt-oss-120b
+          GROQ_FALLBACK_MODEL: openai/gpt-oss-20b
+          COMPANY_SLUG: lumea
+          BRAIN: groq

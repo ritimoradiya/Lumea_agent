@@ -7,7 +7,11 @@ import { useEffect, useRef, useState } from "react";
  *
  * Uses IntersectionObserver rather than scroll listeners: the browser does
  * the work off the main thread, so a grid of twelve cards costs nothing.
- * Respects prefers-reduced-motion by showing everything immediately.
+ *
+ * prefers-reduced-motion is honoured in CSS rather than here. Reading the
+ * media query in the effect meant calling setState synchronously inside it,
+ * which is exactly the cascading-render pattern React warns about — and it is
+ * a presentational concern, so CSS is the right place for it anyway.
  */
 export default function Reveal({
   children,
@@ -22,10 +26,6 @@ export default function Reveal({
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setShown(true);
-      return;
-    }
     const el = ref.current;
     if (!el) return;
 
@@ -45,12 +45,13 @@ export default function Reveal({
   return (
     <div
       ref={ref}
-      className={className}
-      style={{
-        opacity: shown ? 1 : 0,
-        transform: shown ? "translateY(0)" : "translateY(22px)",
-        transition: `opacity .8s var(--ease-spring) ${delay}ms, transform .8s var(--ease-spring) ${delay}ms`,
-      }}
+      data-revealed={shown ? "" : undefined}
+      className={`reveal ${className ?? ""}`}
+      style={
+        {
+          "--reveal-delay": `${delay}ms`,
+        } as React.CSSProperties
+      }
     >
       {children}
     </div>

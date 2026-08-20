@@ -58,6 +58,29 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* Scroll reveal. Reduced motion is handled here rather than in JavaScript:
+   it is presentational, and reading the media query in an effect meant
+   setting state synchronously inside it. */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.8s var(--ease-spring) var(--reveal-delay, 0ms),
+    transform 0.8s var(--ease-spring) var(--reveal-delay, 0ms);
+}
+.reveal[data-revealed] {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal[data-revealed] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 @keyframes rise {
   from {
     opacity: 0;

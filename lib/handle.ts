@@ -4,6 +4,7 @@ import { respond } from "./agent/respond";
 import { generateRoutine } from "./agent/routine";
 import { isLeadComplete, merge, type Collected } from "./agent/checklist";
 import { sendLeadAlert, sendRoutineToCustomer } from "./email";
+import { checkLimits } from "./limits";
 import {
   db,
   createLeadIfNew,
@@ -42,6 +43,8 @@ export type InboundInput = {
 
 export type InboundResult = {
   reply: string;
+  /** True when a limit was hit and the reply is a holding message. */
+  limited: boolean;
   /** True when a person has taken over and the agent deliberately stayed quiet. */
   handedToHuman: boolean;
   greeting: string | null;
@@ -84,6 +87,32 @@ export async function handleInbound(
     };
   }
 
+  /**
+   * Checked here rather than in each route, so every channel is covered by
+   * construction — a new channel cannot forget to rate limit itself.
+   *
+   * The customer's message is still saved. They said it, we should have it,
+   * and it appears in the admin inbox so a person can pick it up.
+   */
+  const verdict = await checkLimits(conversation.id);
+  if (!verdict.allowed) {
+    await db().from("messages").insert([
+      { conversation_id: conversation.id, role: "customer", body: input.text },
+      { conversation_id: conversation.id, role: "agent", body: verdict.message },
+    ]);
+    console.warn(`[limit] ${verdict.reason} ceiling hit on ${input.channel}`);
+
+    return {
+      reply: verdict.message,
+      limited: true,
+      handedToHuman: false,
+      greeting: null,
+      complete: isLeadComplete(conversation.state.collected),
+      mode: "limited",
+      collected: conversation.state.collected,
+    };
+  }
+
   // A person has taken this thread over. Save what the customer said so it
   // appears in the admin inbox, but do not reply — two answers in two voices
   // is worse than one slightly slower answer from a person.
@@ -98,6 +127,7 @@ export async function handleInbound(
 
     return {
       reply: "",
+      limited: false,
       handedToHuman: true,
       greeting: null,
       complete: isLeadComplete(conversation.state.collected),
@@ -143,6 +173,7 @@ export async function handleInbound(
 
   return {
     reply: result.reply,
+    limited: false,
     handedToHuman: false,
     // Only on a thread's first message, so the widget can show it above the reply.
     greeting: conversation.isNew ? greetingFor(company) : null,

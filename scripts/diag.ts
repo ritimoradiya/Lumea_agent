@@ -24,7 +24,10 @@ async function call(label: string, prompt: string) {
   });
   const ms = Date.now() - t;
   const h = res.headers;
-  const body: any = await res.json();
+  const body = (await res.json()) as {
+    error?: { message?: string };
+    usage?: { prompt_tokens: number; completion_tokens: number };
+  };
 
   console.log(`\n${label}  →  ${ms}ms   HTTP ${res.status}`);
   console.log(`  reqs left:   ${h.get("x-ratelimit-remaining-requests")} / ${h.get("x-ratelimit-limit-requests")}`);

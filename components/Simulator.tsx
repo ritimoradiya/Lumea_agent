@@ -19,11 +19,19 @@ export default function Simulator() {
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
-  const [threadId, setThreadId] = useState("");
+  /**
+   * A ref, not state. Nothing renders from it, and generating it in an effect
+   * meant a synchronous setState inside that effect — the cascading-render
+   * pattern React warns about. Created lazily on first use instead.
+   */
+  const threadRef = useRef("");
+  const threadId = () => {
+    if (!threadRef.current) threadRef.current = `sim-${crypto.randomUUID()}`;
+    return threadRef.current;
+  };
   const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setThreadId(`sim-${crypto.randomUUID()}`);
     fetch("/api/chat")
       .then((r) => r.json())
       .then((d) => setBubbles([{ from: "them", text: d.greeting }]))
@@ -38,7 +46,7 @@ export default function Simulator() {
   }, [bubbles]);
 
   function reset() {
-    setThreadId(`sim-${crypto.randomUUID()}`);
+    threadRef.current = "";
     fetch("/api/chat")
       .then((r) => r.json())
       .then((d) => setBubbles([{ from: "them", text: d.greeting }]));
@@ -46,7 +54,7 @@ export default function Simulator() {
 
   async function send() {
     const text = draft.trim();
-    if (!text || busy || !threadId) return;
+    if (!text || busy) return;
     setDraft("");
     setBusy(true);
     setBubbles((b) => [...b, { from: "me", text }, { from: "them", text: "" }]);
@@ -55,7 +63,7 @@ export default function Simulator() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ threadId, text, channel: "simulator" }),
+        body: JSON.stringify({ threadId: threadId(), text, channel: "simulator" }),
       });
       if (!res.body) throw new Error("no stream");
 
