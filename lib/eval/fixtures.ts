@@ -152,8 +152,13 @@ export const FIXTURES: Fixture[] = [
     name: "promises email and holds the address",
     reply:
       "Thanks Priya. We'll email that routine over to you shortly so you have it written down.",
-    known: { firstName: "Priya", email: "priya@example.com" },
+    known: {
+      firstName: "Priya",
+      email: "priya@example.com",
+      description: "dry and flaky",
+    },
     trips: [],
+    note: "The concern matters here: promising a routine without one is a separate rule.",
   },
   {
     name: "quotes a real catalogue price",
@@ -202,6 +207,33 @@ export const FIXTURES: Fixture[] = [
     note: "A dash inside a line is not a markdown list.",
   },
   {
+    name: "promises a routine knowing nothing about their skin",
+    reply:
+      "Here\u2019s a written routine for you, Raksha. I\u2019ll email it to rakshachabhadia@gmail.com.",
+    known: { firstName: "Raksha", email: "rakshachabhadia@gmail.com" },
+    trips: ["no-routine-promise-without-concern"],
+    note: "Real. She was told this and nothing was ever sent, because no routine could be written.",
+  },
+  {
+    name: "offers follow-up instead of promising a routine",
+    reply:
+      "Bright Eye Cream suits most skin types and is fragrance-free. Happy to have a colleague follow up by email if that would help.",
+    known: { firstName: "Raksha", email: "rakshachabhadia@gmail.com" },
+    trips: [],
+    note: "The corrected shape of the reply above. Must pass.",
+  },
+  {
+    name: "promises a routine and has the concern to write it",
+    reply:
+      "Your starter routine is on its way to hemin@example.com, and a colleague will review it and follow up.",
+    known: {
+      firstName: "Hemin",
+      email: "hemin@example.com",
+      description: "oily with acne breakouts",
+    },
+    trips: [],
+  },
+  {
     name: "quotes the real subscription discount",
     reply:
       "Any product can go on a 30, 60 or 90 day cycle at 15% off, and you can pause or cancel any time.",
@@ -213,7 +245,11 @@ export const FIXTURES: Fixture[] = [
     name: "offers a colleague follow-up without claiming authorship",
     reply:
       "Your routine is on its way to priya@example.com, and a colleague will review it and follow up.",
-    known: { firstName: "Priya", email: "priya@example.com" },
+    known: {
+      firstName: "Priya",
+      email: "priya@example.com",
+      description: "dry and flaky",
+    },
     trips: [],
     note: "Deliberate: the owner is emailed about every lead. Reviewing is not writing.",
   },

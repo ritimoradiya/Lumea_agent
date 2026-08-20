@@ -2,7 +2,12 @@ import { getBrain, type ChatMessage } from "./brain";
 import { getCompany, greetingFor, type Company } from "./company";
 import { respond } from "./agent/respond";
 import { generateRoutine } from "./agent/routine";
-import { isLeadComplete, merge, type Collected } from "./agent/checklist";
+import {
+  canWriteRoutine,
+  isLeadComplete,
+  merge,
+  type Collected,
+} from "./agent/checklist";
 import { sendLeadAlert, sendRoutineToCustomer } from "./email";
 import { checkLimits } from "./limits";
 import {
@@ -234,19 +239,36 @@ async function deliverLead(args: {
   // Either a previous turn already sent these, or a retry is in progress.
   if (!lead.isNew && (await isLeadNotified(lead.id))) return;
 
-  const brain = await getBrain();
-  const routine = await generateRoutine(
-    brain,
-    args.company,
-    args.collected,
-    args.history
-  );
+  // Only generated when there is something to base it on - otherwise this is
+  // a model call, and a token spend, for text nobody will ever receive.
+  const routine = canWriteRoutine(args.collected)
+    ? await generateRoutine(
+        await getBrain(),
+        args.company,
+        args.collected,
+        args.history
+      )
+    : "";
 
   const transcript = args.history
     .map((m) => `${m.role === "user" ? "Customer" : "Lumea"}: ${m.content}`)
     .join("\n\n");
 
-  await sendRoutineToCustomer(args.company, args.collected, routine);
+  /**
+   * The owner always hears about it; the customer only gets a routine we can
+   * actually write. Previously both were gated on the same check, so someone
+   * who gave a name and an address but never described their skin produced
+   * neither - no routine, and no word to the owner that she had been in touch.
+   */
+  if (canWriteRoutine(args.collected)) {
+    await sendRoutineToCustomer(args.company, args.collected, routine);
+  } else {
+    console.log(
+      `[lead] ${args.collected.email}: no concern on file, so no routine — ` +
+        "alerting the owner only"
+    );
+  }
+
   await sendLeadAlert(args.company, args.collected, transcript, args.channel);
 
   /**

@@ -124,10 +124,37 @@ const MAX_ATTEMPTS = 2;
  * with someone whose experience level you do not know. You cannot follow up
  * with someone who never gave you an email address.
  */
-export const REQUIRED_FIELDS: Field[] = ["firstName", "email", "description"];
+export const REQUIRED_FIELDS: Field[] = ["firstName", "email"];
 
 /** Collected when offered, but never allowed to block a lead. */
-export const BONUS_FIELDS: Field[] = ["lastName", "experience", "phone"];
+export const BONUS_FIELDS: Field[] = [
+  "lastName",
+  "description",
+  "experience",
+  "phone",
+];
+
+/**
+ * The concern used to be required, and it silently swallowed real customers.
+ *
+ * One asked whether Bright Eye Cream suited her, gave her name and her email,
+ * was told "here is a written routine for you, I'll email it to
+ * rakshachabhadia@gmail.com" - and nothing was sent, because she had never
+ * stated a skin type. The owner never heard she existed either. This is the
+ * same mistake `experience` made, written up two dozen lines above and then
+ * repeated.
+ *
+ * So the two thresholds are now separate, because they are different questions:
+ *
+ *   isLeadComplete   - is this worth telling the owner about? Contact details
+ *                      are enough. Someone asked about a product and left an
+ *                      address; the transcript carries the rest.
+ *   canWriteRoutine  - can we write something worth reading? That needs to
+ *                      know something about their skin, or it is filler.
+ */
+export function canWriteRoutine(collected: Collected): boolean {
+  return Boolean(collected.description?.trim());
+}
 
 /** State that has to survive between turns. */
 export type ConversationState = {

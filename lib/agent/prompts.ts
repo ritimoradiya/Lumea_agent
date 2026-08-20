@@ -31,6 +31,19 @@ export function buildSystemPrompt(
 say that anything will be emailed or sent to them, and must not say a colleague
 will follow up by email. You may only ASK for their email address.`;
 
+  /**
+   * The same imperative trick as noEmailWarning, for the same reason: a
+   * general rule was not enough. The agent promised a written routine to
+   * someone whose skin it knew nothing about, and no routine could be
+   * generated, so nothing arrived.
+   */
+  const noConcernWarning = collected.description?.trim()
+    ? ""
+    : `\n\nYOU DO NOT KNOW ANYTHING ABOUT THIS CUSTOMER'S SKIN. Therefore you
+must NOT say a routine will be emailed or sent to them - one cannot be written
+without knowing what their skin needs. You may answer their questions, and you
+may ask what their skin is like, but promise them nothing.`;
+
   const known = Object.entries(collected)
     .filter(([, v]) => v?.trim())
     .map(([k, v]) => `  - ${k}: ${v}`)
@@ -51,10 +64,14 @@ will follow up by email. You may only ASK for their email address.`;
         ? `THIS TURN: ask for NOTHING. Do not request any personal detail, not even
 politely, and do not say you will need details later. Just be genuinely
 useful and answer what they said. Earning the conversation comes first.`
-        : `THIS TURN: you have everything you need. Ask for NOTHING further.
+        : collected.description?.trim()
+          ? `THIS TURN: you have everything you need. Ask for NOTHING further.
 Answer any remaining question, then tell them a starter routine is on its way to
 their email and that a colleague will review it and follow up within one
-business day.`;
+business day.`
+          : `THIS TURN: ask for NOTHING further. Answer any remaining question
+and offer to have a colleague follow up by email. Do NOT promise a routine -
+you do not know what their skin needs, so there is nothing to send.`;
 
   return `You are the customer support agent for ${company.name}.
 Industry: ${company.industry}
@@ -136,6 +153,6 @@ no "Thank you for choosing". Never open with "Certainly" or "Absolutely".
 
 # ─────────────────────────────────────────────────────────────
 # THIS IS THE MOST IMPORTANT INSTRUCTION IN THIS PROMPT
-${directive}${noEmailWarning}
+${directive}${noEmailWarning}${noConcernWarning}
 # ─────────────────────────────────────────────────────────────`;
 }

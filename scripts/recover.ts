@@ -17,7 +17,12 @@ import { db } from "../lib/db";
 import { getBrain } from "../lib/brain";
 import { getCompany } from "../lib/company";
 import { generateRoutine } from "../lib/agent/routine";
-import { isLeadComplete, REQUIRED_FIELDS, type Collected } from "../lib/agent/checklist";
+import {
+  canWriteRoutine,
+  isLeadComplete,
+  REQUIRED_FIELDS,
+  type Collected,
+} from "../lib/agent/checklist";
 import { createLeadIfNew, isLeadNotified, markLeadNotified } from "../lib/db";
 import { sendLeadAlert, sendRoutineToCustomer } from "../lib/email";
 import type { ChatMessage } from "../lib/brain";
@@ -65,10 +70,19 @@ async function main() {
 
     const name = [collected.firstName, collected.lastName].filter(Boolean).join(" ");
     console.log(bold(`  ${name || collected.email}`) + dim(`  ${c.channel}`));
-    console.log(dim(`    ${collected.email} · ${collected.description}`));
+    const writable = canWriteRoutine(collected);
+    console.log(
+      dim(`    ${collected.email} · ${collected.description ?? "no concern given"}`)
+    );
 
     if (!SEND) {
-      console.log(yellow("    would send: routine to customer + alert to owner\n"));
+      console.log(
+        yellow(
+          writable
+            ? "    would send: routine to customer + alert to owner\n"
+            : "    would send: alert to owner ONLY (no concern, so no routine)\n"
+        )
+      );
       delivered++;
       continue;
     }
@@ -85,16 +99,22 @@ async function main() {
     }));
 
     try {
-      const routine = await generateRoutine(brain, company, collected, history);
       const transcript = history
         .map((m) => `${m.role === "user" ? "Customer" : company.name}: ${m.content}`)
         .join("\n\n");
 
-      await sendRoutineToCustomer(company, collected, routine);
+      // Same split as live delivery: the owner always hears, the customer only
+      // gets a routine we can actually base on something.
+      if (writable) {
+        const routine = await generateRoutine(brain, company, collected, history);
+        await sendRoutineToCustomer(company, collected, routine);
+      }
       await sendLeadAlert(company, collected, transcript, c.channel as string);
       await markLeadNotified(lead.id);
 
-      console.log(green("    ✓ routine and alert sent\n"));
+      console.log(
+        green(writable ? "    ✓ routine and alert sent\n" : "    ✓ alert sent\n")
+      );
       delivered++;
     } catch (e) {
       console.log(red(`    ✗ ${(e as Error).message}\n`));

@@ -81,11 +81,19 @@ function catalogueAmounts(company: Company): Set<string> {
 const PROMISES_EMAIL =
   /\b(?:we|i|they|someone|(?:one of )?our \w+|a (?:colleague|teammate|specialist|team member))\b[^.?!]{0,30}\b(?:will |'ll |can |going to )?(?:email|send)\b/i;
 
+/**
+ * Both require the word "your".
+ *
+ * Without it, a bare "have" counted as asking, and "happy to have a colleague
+ * follow up by email" was read as a request for an email address. Every
+ * genuine ask names whose detail it wants: "your email", "your name and email
+ * address". Anything that does not is talking about something else.
+ */
 const ASKS_FOR_EMAIL =
-  /\b(?:may i|might i|could i|can i|could you|can you|would you|what(?:'s| is)|share|provide|have)\b[^.?!]{0,60}\b(?:e-?mail|address)\b/i;
+  /\b(?:may i|might i|could i|can i|could you|can you|would you|what(?:'s| is)|share|provide|have|get|take)\b[^.?!]{0,30}\byour\b[^.?!]{0,30}\b(?:e-?mail|address)\b/i;
 
 const ASKS_FOR_NAME =
-  /\b(?:may i|might i|could i|can i|could you|can you|would you|what(?:'s| is)|share|provide|have|tell me)\b[^.?!]{0,40}\b(?:name|called)\b/i;
+  /\b(?:may i|might i|could i|can i|could you|can you|would you|what(?:'s| is)|share|provide|have|get|take|tell me)\b[^.?!]{0,30}\byour\b[^.?!]{0,20}\bname\b/i;
 
 const PERSON =
   // Up to three words may sit between "our" and the role: "in-house" alone
@@ -121,6 +129,42 @@ export const GUARDRAILS: Guardrail[] = [
       if (!PROMISES_EMAIL.test(reply)) return null;
       if (ASKS_FOR_EMAIL.test(reply)) return null;
       return "promised to email with no address on file";
+    },
+  },
+  {
+    id: "no-routine-promise-without-concern",
+    matters:
+      "A customer told her routine was on its way, when nothing could be written because nobody had asked what her skin was like, is waiting for an email that was never generated.",
+    check: (reply, { known }) => {
+      if (known.description?.trim()) return null;
+
+      // Normalised because the model writes a typographic apostrophe, and a
+      // regex expecting the ASCII one silently matched nothing at all.
+      const said = reply.replace(/[\u2018\u2019]/g, "'");
+
+      /**
+       * Deliberately not one regex.
+       *
+       * The first attempt required the routine and the promise to sit close
+       * together, using [^.?!] to stay inside one sentence - and missed the
+       * real reply that caused this, because it spanned two: "Here's a
+       * written routine for you, Raksha. I'll email it to <address>."
+       *
+       * So the two halves are checked independently across the whole reply,
+       * and an ASK is excluded, since "may I have your email so we can send
+       * you a routine?" contains both halves and promises nothing.
+       */
+      const mentionsRoutine = /\b(?:routine|plan|regimen)\b/i.test(said);
+      if (!mentionsRoutine) return null;
+      if (ASKS_FOR_EMAIL.test(said)) return null;
+
+      const promise =
+        /\b(?:is on its way|on the way|will be (?:emailed|sent)|(?:i|we)(?:'ll| will) (?:email|send)|going to (?:email|send)|emailed to|sending (?:it|you|that))\b/i;
+
+      const m = said.match(promise);
+      return m
+        ? `promised a routine with no concern on file: "${m[0].trim()}"`
+        : null;
     },
   },
   {

@@ -1,0 +1,15 @@
+-- A lead no longer needs a stated skin concern.
+--
+-- description was NOT NULL, which is the schema enforcing a rule the
+-- application had already been shown to get wrong. A customer asked whether
+-- Bright Eye Cream suited her, gave her name and her email, was told a written
+-- routine would be emailed to her - and nothing was sent, because she had
+-- never named a skin type. The owner was never told she existed either.
+--
+-- Contact details are enough to act on: the transcript carries what they asked
+-- about. What the concern gates is the ROUTINE, not the lead, and that is now
+-- decided in code (canWriteRoutine) rather than by a constraint that could
+-- only fail the insert outright.
+--
+-- Safe to re-run.
+alter table leads alter column description drop not null;
