@@ -15,7 +15,13 @@ const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
 const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
 const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
 
-const TEST_EMAIL = process.env.E2E_CUSTOMER_EMAIL ?? "riti150802@gmail.com";
+/**
+ * Where the test "customer" receives their routine.
+ *
+ * No default: hardcoding a real address put a personal email into a public
+ * repository, which is not the sort of thing to leave lying in a test script.
+ */
+const TEST_EMAIL = process.env.E2E_CUSTOMER_EMAIL;
 
 const TURNS = [
   "hi, my skin is really dry and flaky and quite sensitive",
@@ -24,6 +30,14 @@ const TURNS = [
 ];
 
 async function main() {
+  if (!TEST_EMAIL) {
+    console.error(
+      "\n\x1b[31m✗ Set E2E_CUSTOMER_EMAIL to the address the test customer should use.\x1b[0m\n" +
+        "\x1b[2m  E2E_CUSTOMER_EMAIL=you@example.com npm run e2e\x1b[0m\n"
+    );
+    process.exit(1);
+  }
+
   // A fresh thread each run so we always exercise the create path.
   const threadId = `e2e-${Date.now()}`;
   console.log(bold(`\n  end-to-end · thread ${threadId}`));
