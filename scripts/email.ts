@@ -6,6 +6,13 @@
  * Connects OUT to Gmail over IMAP, so nothing needs to be publicly reachable.
  * Polls rather than pushes: Gmail push requires a Google Cloud project and
  * Pub/Sub, and a minute of latency is irrelevant for email.
+ *
+ * Runs forever by default, which is what you want on a laptop. Set
+ * EMAIL_MAX_RUNTIME_MS to stop after a while instead — that is how the
+ * scheduled GitHub Action runs it, since a job has to end for the next one
+ * to start. The clock is only checked BETWEEN passes, never during one, so
+ * the worker can never be cut off between sending a reply and marking the
+ * mail read. That gap is the one place a duplicate reply could come from.
  */
 import { config } from "dotenv";
 config({ path: ".env.local", override: true });
@@ -21,6 +28,9 @@ const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
 const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
 
 const EVERY_MS = Number(process.env.EMAIL_POLL_MS ?? 30000);
+
+/** 0 means run forever. */
+const MAX_RUNTIME_MS = Number(process.env.EMAIL_MAX_RUNTIME_MS ?? 0);
 
 /**
  * Turn a From header into known fields.
@@ -91,7 +101,15 @@ async function tick() {
 async function main() {
   const company = await getCompany();
   console.log(bold(`\n  ${process.env.GMAIL_ADDRESS} is being watched`));
-  console.log(dim(`  ${company.name} · polling every ${EVERY_MS / 1000}s · IMAP, no public URL needed\n`));
+  console.log(
+    dim(
+      `  ${company.name} · polling every ${EVERY_MS / 1000}s · IMAP, no public URL needed` +
+        (MAX_RUNTIME_MS ? ` · stopping after ${MAX_RUNTIME_MS / 1000}s` : "") +
+        "\n"
+    )
+  );
+
+  const deadline = MAX_RUNTIME_MS ? Date.now() + MAX_RUNTIME_MS : Infinity;
 
   for (;;) {
     try {
@@ -99,6 +117,13 @@ async function main() {
     } catch (error) {
       console.error(red(`  ✗ ${(error as Error).message}`));
     }
+
+    // Checked here, between passes, so a reply is never interrupted.
+    if (Date.now() + EVERY_MS >= deadline) {
+      console.log(dim("\n  time is up — the next scheduled run takes over\n"));
+      return;
+    }
+
     await new Promise((r) => setTimeout(r, EVERY_MS));
   }
 }

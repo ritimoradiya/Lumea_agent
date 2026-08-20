@@ -1,0 +1,97 @@
+name: Email
+
+# Answers mail sent to the Lumea inbox with nobody's laptop switched on.
+#
+# This exists because the poll cannot live on Netlify. Checking Gmail over
+# IMAP - connect, search, log out - takes about sixty seconds, and Netlify
+# kills any function at thirty. It is not a code problem; the work simply does
+# not fit in the box. A GitHub Actions job has no such ceiling, and minutes are
+# unlimited on a public repository.
+#
+# Every five minutes is the tightest schedule cron allows. GitHub also runs
+# these on a best-effort basis and can be minutes late when it is busy, so
+# treat the reply time as "within about ten minutes", not instant. That is a
+# perfectly normal speed for email, and unread mail waits - nothing is lost by
+# being late.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  # So you can run it by hand from the Actions tab without waiting.
+  workflow_dispatch:
+
+# Never two at once. Both would fetch the same unread mail and answer it twice.
+# Queued rather than cancelled on purpose: cancelling could kill a run in the
+# gap between sending a reply and marking the mail read, which is exactly how
+# a customer would get the same answer twice.
+concurrency:
+  group: email-poll
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+
+    # Well above the four minutes the worker gives itself, so it always stops
+    # on its own terms rather than being cut off mid-reply.
+    timeout-minutes: 8
+
+    steps:
+      # Until the secrets are added this would fail every five minutes and
+      # send a failure notice each time. Better to do nothing, quietly, and
+      # say so in the log.
+      - name: Are the secrets configured?
+        id: gate
+        run: |
+          if [ -z "${{ secrets.GMAIL_APP_PASSWORD }}" ] || [ -z "${{ secrets.GROQ_API_KEY }}" ]; then
+            echo "ready=no" >> "$GITHUB_OUTPUT"
+            echo "Secrets are not set yet, so there is nothing to do."
+            echo "Add them under Settings -> Secrets and variables -> Actions."
+          else
+            echo "ready=yes" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.ready == 'yes'
+
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.ready == 'yes'
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+        if: steps.gate.outputs.ready == 'yes'
+
+      - name: Answer anything unread
+        if: steps.gate.outputs.ready == 'yes'
+        run: npm run email
+        env:
+          # Four minutes of polling, then exit so the next run can start.
+          # Overlapping the five-minute schedule would just queue behind the
+          # concurrency group and waste a runner.
+          EMAIL_MAX_RUNTIME_MS: "240000"
+          EMAIL_POLL_MS: "20000"
+
+          # Every value comes from a repository secret, including the ones
+          # that are not really secret. This file is public, and a personal
+          # address in a public repo has already had to be removed from this
+          # project once.
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          OWNER_NOTIFY_EMAIL: ${{ secrets.OWNER_NOTIFY_EMAIL }}
+
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: openai/gpt-oss-120b
+          GROQ_FALLBACK_MODEL: openai/gpt-oss-20b
+
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+          COMPANY_SLUG: lumea
+          BRAIN: groq
+
+          # Same hourly ceilings as the website, so a mail loop cannot burn
+          # the day's token budget.
+          LIMIT_PER_THREAD: "25"
+          LIMIT_GLOBAL: "120"
