@@ -22,6 +22,26 @@ function getThreadId(): string {
   return fresh;
 }
 
+/**
+ * Openers offered on a blank conversation.
+ *
+ * Phrased as a customer would say it, not as a category label, because each
+ * one is sent as an ordinary message - there is no special path through the
+ * agent for them. A picker that fed structured data would need its own branch
+ * in the conversation engine, and then the two would drift.
+ *
+ * The point is not saving keystrokes. Opening a chat with nothing to say is
+ * the moment most people close it, and "my skin is dry and tight" gives the
+ * agent a concern on the first turn, which is what a lead needs.
+ */
+const OPENERS = [
+  { label: "Dry", say: "my skin is dry and tight" },
+  { label: "Oily", say: "my skin is oily and shiny by midday" },
+  { label: "Sensitive", say: "my skin is sensitive and reacts easily" },
+  { label: "Breakouts", say: "I get breakouts and want to calm them" },
+  { label: "Dullness", say: "my skin looks dull and I want more glow" },
+] as const;
+
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -65,8 +85,8 @@ export default function ChatWidget() {
     });
   }, [messages]);
 
-  async function send() {
-    const text = draft.trim();
+  async function send(override?: string) {
+    const text = (override ?? draft).trim();
     if (!text || busy) return;
 
     setDraft("");
@@ -208,6 +228,25 @@ export default function ChatWidget() {
               )}
             </div>
           ))}
+
+          {/* Only on a blank conversation: once they have said anything, the
+              conversation is the interface and these would be clutter. */}
+          {messages.length === 1 && !busy && (
+            <div className="mt-1.5 flex flex-wrap gap-1.5 self-start">
+              {OPENERS.map((o) => (
+                <button
+                  key={o.label}
+                  type="button"
+                  onClick={() => void send(o.say)}
+                  className="rounded-full border hairline bg-paper px-3 py-1.5 text-[12.5px]
+                             text-muted transition-colors hover:bg-paper-2 hover:text-ink
+                             active:scale-[0.97]"
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <form
