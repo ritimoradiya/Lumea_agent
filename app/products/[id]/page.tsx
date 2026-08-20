@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProductImage from "@/components/ProductImage";
-import ProductViewer from "@/components/ProductViewer";
 import TextureSwatch from "@/components/TextureSwatch";
 import ChatWidget from "@/components/ChatWidget";
 import AskAboutButton from "@/components/AskAboutButton";
@@ -78,12 +77,7 @@ export default async function ProductPage({
         </p>
 
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
-          <ProductViewer
-            product={product}
-            photo={
-              <ProductImage product={product} className="w-full rounded-[14px]" />
-            }
-          />
+          <ProductImage product={product} className="w-full rounded-[14px]" />
 
           <div className="flex flex-col">
             <span className="text-[11px] uppercase tracking-[0.16em] text-faint">

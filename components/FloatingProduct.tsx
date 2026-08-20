@@ -3,15 +3,12 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Rotates the product toward the cursor, with a slow float underneath.
+ * Tilts the product toward the cursor, with a slow float underneath.
  *
- * A 3D rotation alone would only skew a flat drawing. What actually reads as
- * rotation is what happens ON the surface: the specular highlight travels
- * across the glass and the printed label compresses toward the turning edge.
- * This publishes --spin and --spin-flat for the SVG to do exactly that.
- *
- * Angles stay small on purpose — past about ten degrees a flat silhouette
- * stops looking like a photograph and starts looking like a toy.
+ * A subtle tilt, nothing more. A flat image cannot be turned — past about ten
+ * degrees you are looking at the edge of a picture — so this stays within a
+ * range that reads as an object catching the light rather than a photograph
+ * being skewed.
  */
 export default function FloatingProduct({
   children,
@@ -55,15 +52,11 @@ export default function FloatingProduct({
       cx += (tx - cx) * 0.06;
       cy += (ty - cy) * 0.06;
       const bob = hoverOnly ? 0 : Math.sin(t * 0.0011) * 5;
-      const spin = Math.max(-1, Math.min(1, cx * 2));
+      const tilt = Math.max(-1, Math.min(1, cx * 2));
 
       el.style.transform =
         `perspective(1000px) translateY(${bob}px) ` +
-        `rotateY(${spin * 9}deg) rotateX(${-cy * 5}deg)`;
-
-      // Drives the highlight travel and label compression inside the SVG.
-      el.style.setProperty("--spin", spin.toFixed(3));
-      el.style.setProperty("--spin-flat", (1 - Math.abs(spin) * 0.22).toFixed(3));
+        `rotateY(${tilt * 7}deg) rotateX(${-cy * 4}deg)`;
       raf = requestAnimationFrame(loop);
     };
 

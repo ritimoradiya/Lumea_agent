@@ -1,8 +1,8 @@
 /**
  * The drawn bottle.
  *
- * Deliberately free of filesystem access so a client component can render it —
- * the spin viewer needs to redraw this on every pointer move.
+ * Deliberately free of filesystem access, so it can be rendered from anywhere.
+ * Used when a product has no photograph.
  *
  * Modelled on how premium skincare presents itself, and two things carry that
  * look, neither of them detail:
@@ -78,16 +78,12 @@ const VESSELS = {
     cap: { x: 86, y: 72, width: 28, height: 32, rx: 3 },
     pipette: true,
     label: { y: 138, h: 52 },
-    // dropper body spans 74-128
-    radius: 28,
   },
   jar: {
     body: "M58 136q0-8 8-8h68q8 0 8 8v52q0 9-9 9H67q-9 0-9-9z",
     neck: { x: 66, y: 122, width: 68, height: 18 },
     cap: { x: 54, y: 104, width: 92, height: 26, rx: 4 },
     label: { y: 146, h: 36 },
-    // jar body spans 58-144
-    radius: 44,
   },
   pump: {
     body: "M64 116q0-10 9-12l9-2h36l9 2q9 2 9 12v78q0 9-9 9H73q-9 0-9-9z",
@@ -95,22 +91,18 @@ const VESSELS = {
     cap: { x: 84, y: 64, width: 32, height: 34, rx: 4 },
     spout: true,
     label: { y: 132, h: 50 },
-    radius: 38,
   },
   tube: {
     body: "M80 114h40l6 78q1 11-10 11H84q-11 0-10-11z",
     neck: { x: 92, y: 98, width: 16, height: 20 },
     cap: { x: 85, y: 74, width: 30, height: 26, rx: 4 },
     label: { y: 130, h: 46 },
-    // tube tapers, widest around 80-120
-    radius: 21,
   },
   tall: {
     body: "M76 104q0-8 8-10h32q8 2 8 10v90q0 9-9 9H85q-9 0-9-9z",
     neck: { x: 92, y: 84, width: 16, height: 24 },
     cap: { x: 87, y: 58, width: 26, height: 28, rx: 3 },
     label: { y: 124, h: 56 },
-    radius: 26,
   },
 } as const;
 
@@ -137,39 +129,17 @@ type Props = {
   className?: string;
   /** Cards are small; drop the fine print but keep the brand mark. */
   compact?: boolean;
-  /**
-   * Rotation about the bottle's own vertical axis, in radians.
-   *
-   * A bottle is a shape of revolution, so its silhouette is identical from
-   * every angle — turning it changes only where the printed label sits. And
-   * because light and camera are fixed, the specular highlight does NOT
-   * travel: a cylinder spinning about its own axis has an invariant
-   * illumination pattern. Moving the highlight would read as a sticker being
-   * dragged rather than an object turning.
-   */
-  angle?: number;
 };
 
 export default function ProductDrawing({
   product,
   className,
   compact,
-  angle = 0,
 }: Props) {
   const uid = product.id.replace(/[^a-z0-9]/gi, "");
   const tint = product.tint ?? DEFAULT_TINT;
   const v = VESSELS[vesselFor(product)];
   const size = product.details?.Size ?? "";
-
-  /**
-   * The rotation only moves the label. It slides by sin(angle) across the
-   * visible face, foreshortens by cos(angle) as it nears the edge, and fades
-   * as it goes round the back — a printed edge disappearing around a curve is
-   * gradual, not a snap.
-   */
-  const labelShift = Math.sin(angle) * v.radius;
-  const labelSquash = Math.max(Math.abs(Math.cos(angle)), 0.02);
-  const labelFacing = Math.max(0, Math.min(1, (Math.cos(angle) + 0.12) / 0.35));
 
   // Fine rules standing in for the ingredient block. Real type at this scale
   // is illegible mush; rules read correctly as dense small print.
@@ -236,28 +206,14 @@ export default function ProductDrawing({
         <path d={v.body} fill={`url(#b${uid})`} />
         <path d={v.body} fill={`url(#f${uid})`} />
 
-        {/* Specular reflections, drawn BEFORE the label so print sits on top.
-            Deliberately NOT affected by the rotation: light and camera are
-            fixed, so a cylinder spinning about its own axis has an invariant
-            illumination pattern. Moving these would look wrong. */}
+        {/* Specular reflections, drawn BEFORE the label so print sits on top. */}
         <g clipPath={`url(#cl${uid})`}>
           <rect x="79" y="112" width="6.5" height="96" rx="3.2" fill="#fff" opacity=".42" filter={`url(#sf${uid})`} />
           <rect x="130" y="120" width="3" height="80" rx="1.5" fill="#fff" opacity=".2" filter={`url(#sf${uid})`} />
         </g>
 
-        {/* The label, wrapped around the bottle.
-            Its position is the ONLY thing the rotation changes: it slides by
-            sin(angle) across the visible face, foreshortens by cos(angle) as
-            it approaches the edge, and disappears once it has gone round the
-            back. */}
-        <g
-          clipPath={`url(#cl${uid})`}
-          style={{
-            transform: `translateX(${labelShift.toFixed(2)}px) scaleX(${labelSquash.toFixed(3)})`,
-            transformOrigin: "100px center",
-            opacity: labelFacing,
-          }}
-        >
+        {/* The label — dominant, as on a real bottle. */}
+        <g clipPath={`url(#cl${uid})`}>
           <rect x="44" y={v.label.y} width="112" height={v.label.h} fill={`url(#l${uid})`} />
           <text
             x="100"

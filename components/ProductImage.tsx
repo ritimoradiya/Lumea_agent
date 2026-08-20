@@ -6,8 +6,8 @@ import ProductDrawing from "./ProductDrawing";
  * A product image: the photograph when one exists, the drawing otherwise.
  *
  * Resolving that requires reading the filesystem, which makes this
- * server-only. The drawing itself lives in ProductDrawing so the spin viewer,
- * which is a client component, can render it directly.
+ * server-only. The drawing lives in ProductDrawing, which touches nothing and
+ * can be rendered from anywhere.
  */
 export default function ProductImage({
   product,

@@ -47,7 +47,6 @@ export default async function Home() {
         <div className="hidden gap-8 text-[13px] text-muted sm:flex">
           <a href="#shop">Shop</a>
           <a href="#routine">Routines</a>
-          <a href="#claims">Ingredients</a>
           <a href="#textures">Textures</a>
           <a href="#faq">FAQ</a>
           <a href="#contact">Contact</a>
@@ -116,9 +115,11 @@ export default async function Home() {
           <h2 className="font-serif text-[38px] tracking-[-0.02em]">
             The range
           </h2>
-          <p className="mt-3 max-w-[420px] text-[15px] leading-relaxed text-muted">
-            Four steps. Most people need three or four products, not the whole
-            shelf.
+          <p className="mt-3 max-w-[520px] text-[15px] leading-relaxed text-muted">
+            Built on ingredients you can actually pronounce — ceramides,
+            niacinamide, hyaluronic acid, encapsulated retinol, zinc oxide.
+            Four steps, and most people need three or four products rather than
+            the whole shelf.
           </p>
 
           {groups.map(({ category, items }) => (
