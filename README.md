@@ -56,7 +56,7 @@ polls for four minutes and exits so the next may start.
 
 ```
   web chat ──┐
-  Telegram ──┼──→  respond()  ──→  Groq  or  Ollama
+  Telegram ──┼──→  respond()  ──→  Groq
   email ─────┘         │
                        └──→  Supabase  ──→  lead alert email
 ```
@@ -92,8 +92,11 @@ runs before question selection.
 **Configuration over code.** Brand, catalogue, FAQ, and domain-specific rules
 are defined in `config/companies/*.json`. Universal rules live in the prompt
 builder. Re-targeting the agent to another business requires no code change.
-Inference is likewise pluggable through a two-method `Brain` interface, backed
-by either Groq or a local Ollama model.
+
+**Provider isolation.** Inference sits behind a two-method `Brain` interface,
+resolved by environment variable and loaded dynamically. Nothing above that
+layer knows which provider answers. Groq is the implementation; adding another
+means one file and one case.
 
 ## Testing
 
@@ -120,9 +123,6 @@ npm run chat
 
 `GROQ_API_KEY` is sufficient for conversation. Supabase, Gmail, and Telegram
 credentials enable persistence and the remaining channels.
-
-For offline inference, install [Ollama](https://ollama.com), run `ollama pull
-qwen2.5:3b`, and set `BRAIN=ollama`.
 
 ## Scripts
 
@@ -165,7 +165,7 @@ produces transparent SDK retries rather than an error.
 
 ## Stack
 
-TypeScript · Next.js · Groq · Ollama · Supabase (Postgres) · Zod · Tailwind CSS
+TypeScript · Next.js · Groq · Supabase (Postgres) · Zod · Tailwind CSS
 
 ## License
 

@@ -1,9 +1,15 @@
 /**
  * The brain interface.
  *
- * Everything above this layer is brain-agnostic. Swapping Groq for a
- * local Ollama model means adding one file that satisfies `Brain` —
- * no other code changes.
+ * Everything above this layer is brain-agnostic: nothing outside this folder
+ * knows which provider answers. Adding one means adding one file that
+ * satisfies `Brain` and a case below, and changing nothing else.
+ *
+ * A local Ollama adapter existed here and was removed. It satisfied the
+ * interface and typechecked, but it had never once been executed - which made
+ * the README's offer of offline inference a claim nobody had checked. An
+ * untested path that only exists to illustrate a design point is worth less
+ * than not making the claim.
  */
 
 export type ChatMessage = {
@@ -22,7 +28,7 @@ export type CompleteOptions = {
 };
 
 export interface Brain {
-  /** Human-readable id, e.g. "groq:llama-3.3-70b-versatile". */
+  /** Human-readable id, e.g. "groq:openai/gpt-oss-120b". */
   readonly name: string;
 
   /** Stream a reply token by token. Used for customer-facing replies. */
@@ -38,8 +44,8 @@ export interface Brain {
 /**
  * Picks a brain from the BRAIN env var.
  *
- * Dynamic imports keep the unused provider out of the bundle — so
- * running in groq mode never loads the Ollama client, and vice versa.
+ * Still a switch on one case, and still a dynamic import, so adding a
+ * provider stays a local change and an unused one stays out of the bundle.
  */
 export async function getBrain(): Promise<Brain> {
   const choice = (process.env.BRAIN ?? "groq").toLowerCase();
@@ -49,13 +55,9 @@ export async function getBrain(): Promise<Brain> {
       const { GroqBrain } = await import("./groq");
       return new GroqBrain();
     }
-    case "ollama": {
-      const { OllamaBrain } = await import("./ollama");
-      return new OllamaBrain();
-    }
     default:
       throw new Error(
-        `Unknown BRAIN "${choice}" in .env.local. Expected "groq" or "ollama".`
+        `Unknown BRAIN "${choice}" in .env.local. Expected "groq".`
       );
   }
 }
