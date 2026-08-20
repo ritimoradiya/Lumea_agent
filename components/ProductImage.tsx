@@ -138,14 +138,27 @@ export default function ProductImage({ product, className, compact }: Props) {
   // A real photograph beats any drawing, so use one the moment it exists.
   const photo = photoFor(product.id);
   if (photo) {
+    /**
+     * `fill` positions the image against its container, so the container must
+     * have a height. An SVG carries its own aspect ratio from the viewBox and
+     * needs none, which is why the drawings rendered at any width and the
+     * photographs silently collapsed to nothing on the detail page — it passes
+     * a width but no height.
+     *
+     * So supply a square aspect unless the caller has already given a height.
+     */
+    const sized = /(?:^|\s)(?:h-|aspect-)/.test(className ?? "");
     return (
-      <div className={`relative overflow-hidden ${className ?? ""}`}>
+      <div
+        className={`relative overflow-hidden ${sized ? "" : "aspect-square"} ${className ?? ""}`}
+      >
         <Image
           src={photo}
           alt={`${product.name}, ${product.category}`}
           fill
-          sizes="(max-width: 640px) 100vw, 300px"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 560px"
           className="object-cover"
+          priority={!compact}
         />
       </div>
     );
