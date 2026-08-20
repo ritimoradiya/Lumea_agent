@@ -9,6 +9,7 @@ import {
   type Collected,
 } from "./agent/checklist";
 import {
+  isUndeliverable,
   sendLeadAlert,
   sendRoutineToCustomer,
   summariseForOwner,
@@ -249,6 +250,22 @@ async function deliverLead(args: {
    * call had stamped notified_at yet.
    */
   if (!(await claimLeadForSending(lead.id))) return;
+
+  /**
+   * A reserved test domain means this is a test, so nothing is sent - not the
+   * routine, and not the owner alert either. Skipping only the routine would
+   * still have put a "New lead" email on the owner's phone, which is exactly
+   * what happened while testing the recognition fix.
+   *
+   * The claim is released so the lead is not left looking delivered.
+   */
+  if (isUndeliverable(args.collected.email)) {
+    console.log(
+      `[lead] ${args.collected.email} is a reserved test address — sending nothing`
+    );
+    await releaseLead(lead.id);
+    return;
+  }
 
   // Only generated when there is something to base it on - otherwise this is
   // a model call, and a token spend, for text nobody will ever receive.

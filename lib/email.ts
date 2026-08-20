@@ -22,6 +22,28 @@ function isDryRun(): boolean {
   return process.env.EMAIL_DRY_RUN === "1";
 }
 
+/**
+ * Addresses that can never belong to a real customer.
+ *
+ * RFC 2606 and RFC 6761 reserve these precisely so they cannot be delivered
+ * to, which makes them the natural choice for test data - and that is how a
+ * test run of the identity fix generated a genuine lead alert to the owner's
+ * phone, plus a routine addressed to example.com that could only bounce.
+ *
+ * Relying on remembering EMAIL_DRY_RUN was the flaw. A reserved domain is
+ * unambiguous, so the code can simply decline.
+ */
+export function isUndeliverable(address: string | undefined): boolean {
+  const a = (address ?? "").trim().toLowerCase();
+  if (!a.includes("@")) return true;
+
+  // "localhost" appears twice on purpose: bare, and as a suffix. The bare
+  // form has no dot in front of it, so the suffix branch alone misses it.
+  return /@(?:example\.(?:com|net|org)|localhost|.*\.(?:test|example|invalid|localhost))$/.test(
+    a
+  );
+}
+
 let transport: Transporter | null = null;
 
 function mailer(): Transporter {

@@ -18,6 +18,7 @@ import { GUARDRAILS, inspect, sentenceCount } from "../lib/eval/guardrails";
 import { FIXTURES } from "../lib/eval/fixtures";
 import { getCompany } from "../lib/company";
 import { findEmailIn, findPhoneIn } from "../lib/agent/extract";
+import { isUndeliverable } from "../lib/email";
 import {
   ASKS,
   askLabel,
@@ -229,7 +230,36 @@ async function main() {
     );
   }
 
-  /* ── 6. the catalogue the agent is allowed to talk about ────────── */
+  /* ── 6. addresses that must never receive mail ──────────────────── */
+  console.log(bold("\n  deliverability"));
+
+  const ADDRESSES: [string, boolean][] = [
+    // Reserved by RFC 2606 / 6761, and what test data uses.
+    ["recog-1787250645309@example.com", true],
+    ["someone@example.org", true],
+    ["someone@example.net", true],
+    ["a@host.invalid", true],
+    ["a@thing.test", true],
+    ["a@localhost", true],
+    ["", true],
+    ["not-an-address", true],
+    // Real customers, which must still be reachable.
+    ["hemindhamelia2002@gmail.com", false],
+    ["1032201220@tcetmumbai.in", false],
+    ["riti150802@gmail.com", false],
+    // Not a reserved domain merely for containing the word.
+    ["someone@example.company", false],
+    ["someone@myexample.com", false],
+  ];
+
+  for (const [address, blocked] of ADDRESSES) {
+    check(
+      `${address || "(empty)"} is ${blocked ? "undeliverable" : "deliverable"}`,
+      isUndeliverable(address) === blocked
+    );
+  }
+
+  /* ── 7. the catalogue the agent is allowed to talk about ────────── */
   console.log(bold("\n  catalogue"));
 
   check("every product has a price", company.products.every((p) => p.price));
