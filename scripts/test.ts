@@ -19,6 +19,7 @@ import { FIXTURES } from "../lib/eval/fixtures";
 import { getCompany } from "../lib/company";
 import { findEmailIn, findPhoneIn } from "../lib/agent/extract";
 import { isUndeliverable } from "../lib/email";
+import { capBody } from "../lib/channels/email";
 import {
   ASKS,
   askLabel,
@@ -150,6 +151,25 @@ async function main() {
   );
 
   check(
+    "a mistyped email CAN be corrected",
+    merge({ email: "hemin@gmial.com" }, { email: "hemin@gmail.com" }).email ===
+      "hemin@gmail.com",
+    "otherwise the routine goes to a dead address for ever"
+  );
+
+  check(
+    "a mistyped phone CAN be corrected",
+    merge({ phone: "555 111 2222" }, { phone: "555 111 3333" }).phone ===
+      "555 111 3333"
+  );
+
+  check(
+    "correcting is not the same as clearing",
+    merge({ email: "a@b.com" }, { email: "  " }).email === "a@b.com",
+    "a blank extraction must never wipe a real address"
+  );
+
+  check(
     "a follow-up question cannot rewrite the stated concern",
     merge({ description: "dry skin" }, { description: "asks about retinol" })
       .description === "dry skin",
@@ -259,7 +279,27 @@ async function main() {
     );
   }
 
-  /* ── 7. the catalogue the agent is allowed to talk about ────────── */
+  /* ── 7. inbound email length ────────────────────────────────────── */
+  console.log(bold("\n  inbound size"));
+
+  check("a short body is untouched", capBody("hello there") === "hello there");
+
+  const long = capBody("word ".repeat(3000));
+  check(
+    "a long body is truncated",
+    long.length < 4200,
+    `${long.length} characters`
+  );
+  check("truncation is declared", long.includes("[message truncated]"));
+
+  const lines = capBody("keep me\n".repeat(600));
+  check(
+    "truncation prefers a line break",
+    !/keep m$|kee$/.test(lines.replace("\n\n[message truncated]", "")),
+    "otherwise a word is sliced in half"
+  );
+
+  /* ── 8. the catalogue the agent is allowed to talk about ────────── */
   console.log(bold("\n  catalogue"));
 
   check("every product has a price", company.products.every((p) => p.price));

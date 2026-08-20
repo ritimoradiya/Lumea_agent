@@ -53,6 +53,30 @@ export type InboundEmail = {
  * which inflates the prompt on each turn and, worse, lets the agent read its
  * own earlier replies as if the customer had said them.
  */
+/**
+ * The longest inbound body we will read.
+ *
+ * The web widget caps input at 2,000 characters; email had no cap at all, so
+ * one long message went into the prompt whole. Groq's free tier allows 8,000
+ * tokens a minute, and a single newsletter that slipped past the bulk filter
+ * could spend the lot - starving every other channel for the rest of it.
+ *
+ * The opening is what gets kept, because that is where people put the actual
+ * question. Anything past this is signature, disclaimer or history.
+ */
+const MAX_BODY_CHARS = 4000;
+
+export function capBody(text: string): string {
+  if (text.length <= MAX_BODY_CHARS) return text;
+
+  // Cut at a line break where possible, so a sentence is not sliced mid-word.
+  const head = text.slice(0, MAX_BODY_CHARS);
+  const lastBreak = head.lastIndexOf("\n");
+  const kept = lastBreak > MAX_BODY_CHARS * 0.6 ? head.slice(0, lastBreak) : head;
+
+  return `${kept.trimEnd()}\n\n[message truncated]`;
+}
+
 function stripQuoted(text: string): string {
   const lines = text.split(/\r?\n/);
   const out: string[] = [];
@@ -126,7 +150,7 @@ export async function fetchUnread(limit = 10): Promise<InboundEmail[]> {
         continue;
       }
 
-      const text = stripQuoted(parsed.text ?? "");
+      const text = capBody(stripQuoted(parsed.text ?? ""));
       if (!text) continue;
 
       // References holds the whole ancestry; its first entry is the thread

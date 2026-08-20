@@ -242,20 +242,29 @@ export function isLeadComplete(collected: Collected): boolean {
 }
 
 /**
- * Every field is first-write-wins.
+ * Identity details are first-write-wins. Contact details are not.
  *
- * Identity details obviously must never be overwritten by a later guess.
- * The description was mutable at first, on the theory that someone might
- * change what they need mid-conversation. In practice that let ordinary
- * follow-up questions clobber it: asking "can I use retinol while
- * pregnant?" three turns in rewrote a customer whose actual concern was
- * dry skin into "pregnant, asks about retinol safety".
+ * Locking everything was too blunt. Someone who mistyped their address could
+ * never correct it: they said "sorry, it's hemin@gmail.com not gmial", the
+ * correction was discarded, and the agent went on confirming the dead address
+ * it had recorded first. Email typos are among the most common things a person
+ * does, so this was not an edge case.
  *
- * People state their need in their opening message. Later messages are
- * questions about it, not replacements for it. If someone genuinely
- * changes direction, the colleague following up has the full transcript.
+ * The split follows how each field is read, not how important it is:
+ *
+ *   email, phone     A regex finds these, deterministically. A new, valid,
+ *                    different one in the customer's own message is a
+ *                    correction, and the last word should win.
+ *   the rest         A model infers these, so a later value may be a
+ *                    misreading rather than a change of mind. Mentioning a
+ *                    friend once overwrote the customer's own name, and
+ *                    asking "can I use retinol while pregnant?" rewrote a
+ *                    customer whose actual concern was dry skin.
+ *
+ * People state their need in their opening message; later messages are
+ * questions about it, not replacements for it.
  */
-const LOCKED_FIELDS: Field[] = [...FIELDS];
+const CORRECTABLE_FIELDS: Field[] = ["email", "phone"];
 
 export function merge(current: Collected, incoming: Collected): Collected {
   const next: Collected = { ...current };
@@ -264,9 +273,10 @@ export function merge(current: Collected, incoming: Collected): Collected {
     const value = incoming[field]?.trim();
     if (!value) continue;
 
-    if (LOCKED_FIELDS.includes(field) && !next[field]?.trim()) {
-      next[field] = value;
-    }
+    const isBlank = !next[field]?.trim();
+    const correctable = CORRECTABLE_FIELDS.includes(field);
+
+    if (isBlank || correctable) next[field] = value;
   }
 
   return next;
