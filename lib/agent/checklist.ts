@@ -124,7 +124,23 @@ const MAX_ATTEMPTS = 2;
  * with someone whose experience level you do not know. You cannot follow up
  * with someone who never gave you an email address.
  */
-export const REQUIRED_FIELDS: Field[] = ["firstName", "email"];
+/**
+ * The one field a lead genuinely cannot exist without.
+ *
+ * Everything else has, at some point, been required and then caught silently
+ * dropping a real customer. `experience` did it, `description` did it, and
+ * `firstName` did it too: someone gave an email and said their skin was oily,
+ * was told "I'll email you a short, ready-to-use routine" - and nothing was
+ * sent, because they had not said their name.
+ *
+ * A lead is somewhere to write to, plus one thing worth writing about. Which
+ * of the two signals you get does not matter, so isLeadComplete accepts
+ * either rather than insisting on a particular one.
+ */
+export const REQUIRED_FIELDS: Field[] = ["email"];
+
+/** Any one of these means the person actually engaged, not just landed. */
+const ENGAGEMENT_FIELDS: Field[] = ["description", "firstName"];
 
 /** Collected when offered, but never allowed to block a lead. */
 export const BONUS_FIELDS: Field[] = [
@@ -213,9 +229,16 @@ export function nextAsk(
   );
 }
 
-/** True once every required detail is present. Phone is not required. */
+/**
+ * True once we can reach them and know why we would.
+ *
+ * Deliberately not "every field in a list" - that formulation is what dropped
+ * three different customers, because whichever field happened to be missing
+ * silently voided the whole lead.
+ */
 export function isLeadComplete(collected: Collected): boolean {
-  return REQUIRED_FIELDS.every((f) => collected[f]?.trim());
+  if (!REQUIRED_FIELDS.every((f) => collected[f]?.trim())) return false;
+  return ENGAGEMENT_FIELDS.some((f) => collected[f]?.trim());
 }
 
 /**
@@ -249,8 +272,15 @@ export function merge(current: Collected, incoming: Collected): Collected {
   return next;
 }
 
-/** Progress against REQUIRED fields, for the harness and admin panel. */
+/**
+ * Progress towards a usable lead, for the harness and admin panel.
+ *
+ * Two slots, matching isLeadComplete: somewhere to write to, and something to
+ * write about. Counting every field would show 2/6 for a lead that is
+ * complete, which reads as a failure.
+ */
 export function progress(collected: Collected): string {
-  const have = REQUIRED_FIELDS.filter((f) => collected[f]?.trim()).length;
-  return `${have}/${REQUIRED_FIELDS.length}`;
+  const contactable = REQUIRED_FIELDS.every((f) => collected[f]?.trim()) ? 1 : 0;
+  const engaged = ENGAGEMENT_FIELDS.some((f) => collected[f]?.trim()) ? 1 : 0;
+  return `${contactable + engaged}/2`;
 }

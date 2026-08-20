@@ -17,12 +17,14 @@ config({ path: ".env.local", override: true });
 import { GUARDRAILS, inspect, sentenceCount } from "../lib/eval/guardrails";
 import { FIXTURES } from "../lib/eval/fixtures";
 import { getCompany } from "../lib/company";
+import { findEmailIn, findPhoneIn } from "../lib/agent/extract";
 import {
   ASKS,
   askLabel,
   merge,
   nextAsk,
   isLeadComplete,
+  progress,
   REQUIRED_FIELDS,
 } from "../lib/agent/checklist";
 
@@ -170,12 +172,64 @@ async function main() {
   );
 
   check(
+    "an address and a concern is a lead, with no name",
+    isLeadComplete({ email: "p@e.com", description: "oily skin" }),
+    "real: this person was promised a routine and got nothing"
+  );
+
+  check(
+    "an address and a name is a lead, with no concern",
+    isLeadComplete({ email: "p@e.com", firstName: "Raksha" }),
+    "real: Raksha was promised a routine and got nothing"
+  );
+
+  check(
+    "an address alone is not yet a lead",
+    !isLeadComplete({ email: "p@e.com" }),
+    "otherwise every inbound email is a lead before they have said anything"
+  );
+
+  check(
+    "progress reads out of two, not out of every field",
+    progress({ email: "p@e.com", description: "dry" }) === "2/2",
+    `got ${progress({ email: "p@e.com", description: "dry" })}`
+  );
+
+  check(
     "phone is never required",
     !REQUIRED_FIELDS.includes("phone"),
     "there is no channel that could use it"
   );
 
-  /* ── 5. the catalogue the agent is allowed to talk about ────────── */
+  /* ── 5. extraction, on the shapes that have caused bugs ─────────── */
+  console.log(bold("\n  extraction"));
+
+  const EXTRACTION: [string, "phone" | "email", string | null][] = [
+    // Real. This address was stored as the email AND as the phone number,
+    // because its local part is ten bare digits.
+    ["my email is 1032201220@tcetmumbai.in", "phone", null],
+    ["1032201220@tcetmumbai.in", "email", "1032201220@tcetmumbai.in"],
+    // A genuine number alongside an address must still be found.
+    ["riti@example.com, call me on 555 371 2263", "phone", "555 371 2263"],
+    ["+1 (551) 371-2263", "phone", "+1 (551) 371-2263"],
+    // Real. A millisecond timestamp from an email header, once stored as a
+    // customer's phone number.
+    ["1787242617119", "phone", null],
+    ["hello there", "phone", null],
+  ];
+
+  for (const [text, field, want] of EXTRACTION) {
+    // The finders return undefined for "not found"; the table says null.
+    const got =
+      (field === "email" ? findEmailIn(text) : findPhoneIn(text)) ?? null;
+    check(
+      `${field} of "${text.slice(0, 42)}" is ${want ?? "nothing"}`,
+      got === want,
+      got !== want ? `got ${got ?? "nothing"}` : ""
+    );
+  }
+
+  /* ── 6. the catalogue the agent is allowed to talk about ────────── */
   console.log(bold("\n  catalogue"));
 
   check("every product has a price", company.products.every((p) => p.price));

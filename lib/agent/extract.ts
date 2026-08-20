@@ -29,7 +29,7 @@ const ExtractionSchema = z.object({
   experience: z.string().nullable(),
 });
 
-function findEmail(text: string): string | undefined {
+export function findEmailIn(text: string): string | undefined {
   return text.match(EMAIL_RE)?.[0]?.toLowerCase();
 }
 
@@ -55,8 +55,19 @@ function isPlausiblePhone(value: string): boolean {
   return digits.length === 10 || digits.length === 11;
 }
 
-function findPhone(text: string): string | undefined {
-  for (const candidate of text.match(PHONE_CANDIDATE_RE) ?? []) {
+/**
+ * Phone numbers, with email addresses removed first.
+ *
+ * A student address of 1032201220@tcetmumbai.in was stored as BOTH the email
+ * and the phone number: the local part is ten bare digits, which is exactly
+ * what a mobile number looks like. Digit-shape rules cannot tell those apart,
+ * so the fix is to stop looking where an address has already been found -
+ * anything inside one is part of the address, not a second contact detail.
+ */
+export function findPhoneIn(text: string): string | undefined {
+  const withoutEmails = text.replace(new RegExp(EMAIL_RE.source, "gi"), " ");
+
+  for (const candidate of withoutEmails.match(PHONE_CANDIDATE_RE) ?? []) {
     if (isPlausiblePhone(candidate)) return candidate.trim();
   }
   return undefined;
@@ -78,10 +89,10 @@ export async function extractFields(
   const found: Collected = {};
 
   // 1. Deterministic pass — highest confidence, so it runs first.
-  const email = findEmail(customerMessage);
+  const email = findEmailIn(customerMessage);
   if (email) found.email = email;
 
-  const phone = findPhone(customerMessage);
+  const phone = findPhoneIn(customerMessage);
   if (phone) found.phone = phone;
 
   // 2. Model pass for the fuzzy fields.
@@ -142,7 +153,13 @@ Rules:
       if (!found.email && d.email && EMAIL_RE.test(d.email)) {
         found.email = d.email.trim().toLowerCase();
       }
-      if (!found.phone && d.phone && isPlausiblePhone(d.phone)) {
+      if (
+        !found.phone &&
+        d.phone &&
+        isPlausiblePhone(d.phone) &&
+        // The model can lift the digits out of an address just as easily.
+        !(found.email ?? "").includes(d.phone.replace(/\D/g, ""))
+      ) {
         found.phone = d.phone.trim();
       }
     }

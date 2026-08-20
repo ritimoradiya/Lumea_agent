@@ -24,7 +24,11 @@ import {
   type Collected,
 } from "../lib/agent/checklist";
 import { createLeadIfNew, isLeadNotified, markLeadNotified } from "../lib/db";
-import { sendLeadAlert, sendRoutineToCustomer } from "../lib/email";
+import {
+  sendLeadAlert,
+  sendRoutineToCustomer,
+  summariseForOwner,
+} from "../lib/email";
 import type { ChatMessage } from "../lib/brain";
 
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
@@ -99,9 +103,7 @@ async function main() {
     }));
 
     try {
-      const transcript = history
-        .map((m) => `${m.role === "user" ? "Customer" : company.name}: ${m.content}`)
-        .join("\n\n");
+      const summary = summariseForOwner(company, history);
 
       // Same split as live delivery: the owner always hears, the customer only
       // gets a routine we can actually base on something.
@@ -109,7 +111,7 @@ async function main() {
         const routine = await generateRoutine(brain, company, collected, history);
         await sendRoutineToCustomer(company, collected, routine);
       }
-      await sendLeadAlert(company, collected, transcript, c.channel as string);
+      await sendLeadAlert(company, collected, summary, c.channel as string);
       await markLeadNotified(lead.id);
 
       console.log(

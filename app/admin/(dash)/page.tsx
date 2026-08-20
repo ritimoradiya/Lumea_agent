@@ -1,5 +1,6 @@
 import { listThreads, getThread } from "@/lib/admin";
 import { handBack, replyAsHuman, takeOver } from "../actions";
+import LocalTime from "@/components/LocalTime";
 import { FIELDS } from "@/lib/agent/checklist";
 
 /** Live data — never cache the inbox. */
@@ -243,7 +244,7 @@ export default async function InboxPage({
               {selected.notifiedAt ? (
                 <span className="text-sage-deep">
                   Routine and alert sent{" "}
-                  {new Date(selected.notifiedAt).toLocaleTimeString()}
+                  <LocalTime iso={selected.notifiedAt} timeOnly />
                 </span>
               ) : (
                 <span className="italic text-faint/70">Nothing sent yet</span>

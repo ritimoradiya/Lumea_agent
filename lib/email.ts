@@ -129,11 +129,54 @@ will review it.`;
   });
 }
 
+/**
+ * What the owner actually needs from a conversation.
+ *
+ * The alert used to carry the entire transcript, which for anything past a
+ * few turns is a wall of text with the useful part buried in it. Two things
+ * matter: what the customer said in their own words, and which products they
+ * have already been pointed at - so a follow-up neither repeats the questions
+ * nor contradicts the advice. The full thread is in the admin inbox.
+ */
+export function summariseForOwner(
+  company: Company,
+  // Takes the ChatMessage shape as-is. A system turn never appears in a
+  // stored conversation, and filtering on "user" ignores it if one ever did.
+  history: { role: string; content: string }[]
+): string {
+  const theirs = history
+    .filter((m) => m.role === "user")
+    .map((m) => m.content.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+
+  // Products named in our replies, in the order first mentioned.
+  const mentioned: string[] = [];
+  const ours = history.filter((m) => m.role === "assistant").map((m) => m.content).join(" ");
+  for (const p of company.products) {
+    if (p.name && ours.includes(p.name) && !mentioned.includes(p.name)) {
+      mentioned.push(p.name);
+    }
+  }
+
+  const lines = [
+    "What they said",
+    ...(theirs.length
+      ? theirs.map((t) => `  - ${t.length > 220 ? t.slice(0, 217) + "..." : t}`)
+      : ["  - (nothing yet)"]),
+  ];
+
+  if (mentioned.length) {
+    lines.push("", "Already recommended", `  ${mentioned.join(", ")}`);
+  }
+
+  return lines.join("\n");
+}
+
 /** Tells the owner a lead has landed. */
 export async function sendLeadAlert(
   company: Company,
   collected: Collected,
-  transcript: string,
+  summary: string,
   channel: string
 ): Promise<void> {
   const to = process.env.OWNER_NOTIFY_EMAIL;
@@ -151,9 +194,7 @@ Phone       ${collected.phone ?? "not given"}
 Concern     ${collected.description ?? "—"}
 Experience  ${collected.experience ?? "—"}
 
-Conversation
-────────────
-${transcript}`;
+${summary}`;
 
   await deliver({
     from: `"${company.name} agent" <${process.env.GMAIL_ADDRESS}>`,

@@ -8,7 +8,11 @@ import {
   merge,
   type Collected,
 } from "./agent/checklist";
-import { sendLeadAlert, sendRoutineToCustomer } from "./email";
+import {
+  sendLeadAlert,
+  sendRoutineToCustomer,
+  summariseForOwner,
+} from "./email";
 import { checkLimits } from "./limits";
 import {
   db,
@@ -250,9 +254,7 @@ async function deliverLead(args: {
       )
     : "";
 
-  const transcript = args.history
-    .map((m) => `${m.role === "user" ? "Customer" : "Lumea"}: ${m.content}`)
-    .join("\n\n");
+  const summary = summariseForOwner(args.company, args.history);
 
   /**
    * The owner always hears about it; the customer only gets a routine we can
@@ -269,7 +271,7 @@ async function deliverLead(args: {
     );
   }
 
-  await sendLeadAlert(args.company, args.collected, transcript, args.channel);
+  await sendLeadAlert(args.company, args.collected, summary, args.channel);
 
   /**
    * A dry run must not stamp notified_at. Doing so made a test permanently

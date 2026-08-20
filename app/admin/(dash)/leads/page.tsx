@@ -1,4 +1,5 @@
 import { listLeads } from "@/lib/admin";
+import LocalTime from "@/components/LocalTime";
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +73,7 @@ export default async function LeadsPage() {
                     )}
                   </td>
                   <td className="px-4 py-3.5 text-[12px] text-faint">
-                    {new Date(l.createdAt).toLocaleString()}
+                    <LocalTime iso={l.createdAt} />
                   </td>
                 </tr>
               ))}
