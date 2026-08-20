@@ -197,8 +197,9 @@ question with its own advice instead of pointing to a doctor.
 - [x] Telegram channel
 - [x] Email channel with correct threading
 - [x] Rate limiting, CI, and deploy
-- [ ] Cross-channel identity — recognise a returning customer by email
-- [ ] An evaluation suite over the guardrails
+- [x] Cross-channel identity — recognise a returning customer by email
+- [x] An evaluation suite over the guardrails
+- [x] Answer email with no machine of mine running
 - [ ] Observability: token spend, latency, completion rate by channel
 
 ## Stack
