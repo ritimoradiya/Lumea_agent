@@ -37,17 +37,45 @@ jobs:
 
     steps:
       # Until the secrets are added this would fail every five minutes and
-      # send a failure notice each time. Better to do nothing, quietly, and
-      # say so in the log.
+      # send a failure notice each time. Better to do nothing, quietly.
+      #
+      # It names the missing ones, because the first version only said yes or
+      # no: the run went green in nine seconds having done nothing at all, and
+      # there was no way to tell which secret was absent without guessing.
+      # Only NAMES are printed here, never values.
       - name: Are the secrets configured?
         id: gate
+        env:
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          OWNER_NOTIFY_EMAIL: ${{ secrets.OWNER_NOTIFY_EMAIL }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          if [ -z "${{ secrets.GMAIL_APP_PASSWORD }}" ] || [ -z "${{ secrets.GROQ_API_KEY }}" ]; then
+          missing=""
+          for name in GMAIL_ADDRESS GMAIL_APP_PASSWORD OWNER_NOTIFY_EMAIL \
+                      GROQ_API_KEY SUPABASE_URL SUPABASE_ANON_KEY \
+                      SUPABASE_SERVICE_ROLE_KEY; do
+            if [ -z "${!name}" ]; then
+              missing="$missing $name"
+            else
+              echo "  present: $name"
+            fi
+          done
+
+          if [ -n "$missing" ]; then
             echo "ready=no" >> "$GITHUB_OUTPUT"
-            echo "Secrets are not set yet, so there is nothing to do."
-            echo "Add them under Settings -> Secrets and variables -> Actions."
+            echo ""
+            echo "Not running. These secrets are missing:$missing"
+            echo ""
+            echo "Add them at Settings -> Secrets and variables -> Actions,"
+            echo "then run this workflow again."
           else
             echo "ready=yes" >> "$GITHUB_OUTPUT"
+            echo ""
+            echo "All seven present. Checking the inbox."
           fi
 
       - uses: actions/checkout@v4
