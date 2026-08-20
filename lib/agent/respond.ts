@@ -74,11 +74,30 @@ export async function respond(
    * this conversation still beats what we knew before.
    */
   let recognised = false;
-  if (input.recogniseBy && learned.email && !state.collected.email?.trim()) {
-    const known = await input.recogniseBy(learned.email);
+
+  /**
+   * Fires on any known address, not only a newly typed one.
+   *
+   * The condition used to be "an email was learned this turn AND we did not
+   * already have one", which quietly excluded every email conversation: the
+   * address arrives from the envelope before the first reply, so it is never
+   * newly learned. A customer who had told us his skin was oily on the website
+   * replied to his routine email an hour later and was treated as a stranger -
+   * the alert read "no concern given".
+   *
+   * The gap check keeps this cheap: once a name and a concern are on file
+   * there is nothing left to look up, so it stops.
+   */
+  const address = collected.email?.trim();
+  const somethingToLearn =
+    !collected.firstName?.trim() || !collected.description?.trim();
+
+  if (input.recogniseBy && address && somethingToLearn) {
+    const known = await input.recogniseBy(address);
     if (known) {
+      const before = JSON.stringify(collected);
       collected = merge(collected, known);
-      recognised = true;
+      recognised = JSON.stringify(collected) !== before;
     }
   }
 

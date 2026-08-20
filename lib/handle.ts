@@ -16,12 +16,12 @@ import {
 import { checkLimits } from "./limits";
 import {
   db,
+  claimLeadForSending,
   createLeadIfNew,
   recogniseByEmail,
+  releaseLead,
   rememberContact,
-  isLeadNotified,
   loadConversation,
-  markLeadNotified,
   saveTurn,
   syncCompany,
   type Channel,
@@ -240,8 +240,15 @@ async function deliverLead(args: {
     args.collected
   );
 
-  // Either a previous turn already sent these, or a retry is in progress.
-  if (!lead.isNew && (await isLeadNotified(lead.id))) return;
+  /**
+   * Claim it before doing anything, not after.
+   *
+   * Reading "has this been sent?" and then sending leaves a gap, and delivery
+   * is fire-and-forget so several turns can be inside that gap at once. One
+   * customer got the same routine twice, 86 seconds apart, because neither
+   * call had stamped notified_at yet.
+   */
+  if (!(await claimLeadForSending(lead.id))) return;
 
   // Only generated when there is something to base it on - otherwise this is
   // a model call, and a token spend, for text nobody will ever receive.
@@ -257,28 +264,33 @@ async function deliverLead(args: {
   const summary = summariseForOwner(args.company, args.history);
 
   /**
-   * The owner always hears about it; the customer only gets a routine we can
-   * actually write. Previously both were gated on the same check, so someone
-   * who gave a name and an address but never described their skin produced
-   * neither - no routine, and no word to the owner that she had been in touch.
+   * Wrapped so a failed send hands the claim back. Without this a transient
+   * SMTP error would leave the lead stamped as sent forever, and `npm run
+   * recover` - which exists precisely to catch that - would skip it.
    */
-  if (canWriteRoutine(args.collected)) {
-    await sendRoutineToCustomer(args.company, args.collected, routine);
-  } else {
-    console.log(
-      `[lead] ${args.collected.email}: no concern on file, so no routine — ` +
-        "alerting the owner only"
-    );
+  try {
+    // The owner always hears about it; the customer only gets a routine we can
+    // actually write. Both were once gated on the same check, so someone who
+    // gave a name and an address but never described their skin produced
+    // neither - no routine, and no word to the owner that she had been in touch.
+    if (canWriteRoutine(args.collected)) {
+      await sendRoutineToCustomer(args.company, args.collected, routine);
+    } else {
+      console.log(
+        `[lead] ${args.collected.email}: no concern on file, so no routine — ` +
+          "alerting the owner only"
+      );
+    }
+
+    await sendLeadAlert(args.company, args.collected, summary, args.channel);
+  } catch (error) {
+    await releaseLead(lead.id);
+    throw error;
   }
 
-  await sendLeadAlert(args.company, args.collected, summary, args.channel);
-
-  /**
-   * A dry run must not stamp notified_at. Doing so made a test permanently
-   * block real delivery for that conversation — the lead looked handled when
-   * nothing had actually been sent.
-   */
-  if (process.env.EMAIL_DRY_RUN !== "1") {
-    await markLeadNotified(lead.id);
+  // notified_at was stamped by the claim above. A dry run has to undo it, or
+  // a test would permanently block real delivery for that conversation.
+  if (process.env.EMAIL_DRY_RUN === "1") {
+    await releaseLead(lead.id);
   }
 }

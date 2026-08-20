@@ -25,9 +25,15 @@ const stamp = Date.now();
 const EMAIL = `identity-test-${stamp}@example.com`;
 const PACE = Number(process.env.PACE_MS ?? 18000);
 
-async function say(channel: "web" | "telegram", threadId: string, text: string) {
+async function say(
+  channel: "web" | "telegram" | "email",
+  threadId: string,
+  text: string,
+  /** What the transport already knows, as an email envelope supplies it. */
+  known?: Record<string, string>
+) {
   console.log(bold(`\n  ${channel}  `) + text);
-  const r = await handleInbound({ channel, threadId, text });
+  const r = await handleInbound({ channel, threadId, text, known });
   console.log(cyan("  agent ") + " " + r.reply.replace(/\n/g, "\n          "));
   console.log(
     dim(
@@ -58,6 +64,26 @@ async function main() {
   await new Promise((r) => setTimeout(r, PACE));
   const second = await say("telegram", tg, `my email is ${EMAIL}`);
 
+  /**
+   * ── Conversation three: a reply that arrives by email ──────────────
+   *
+   * The case that was broken. An email carries the address in its envelope,
+   * so it is never "newly learned" - which is exactly the condition
+   * recognition used to require, so email conversations were never
+   * recognised at all. A customer who had described his skin on the website
+   * replied to his routine an hour later and was treated as a stranger.
+   */
+  console.log(bold("\n\n─── a reply arrives by email, on its own thread ───"));
+  await new Promise((r) => setTimeout(r, PACE));
+  const byEmail = await say(
+    "email",
+    `<reply-${stamp}@mail.example>`,
+    "This is perfect, thank you!",
+    { email: EMAIL, firstName: "Priya", lastName: "Raman" }
+  );
+
+  const carriedConcern = Boolean(byEmail.collected.description?.trim());
+
   // ── What the database believes ─────────────────────────────────────
   console.log(bold("\n\n  what the database knows"));
   const { data: co } = await db().from("companies").select("id").eq("slug", company.slug).single();
@@ -87,12 +113,17 @@ async function main() {
   );
   console.log(
     contact.priorConversations >= 2
-      ? green(`  ✓ both conversations linked to one person`)
+      ? green(`  ✓ every conversation linked to one person`)
       : red(`  ✗ only ${contact.priorConversations} conversation linked`)
+  );
+  console.log(
+    carriedConcern
+      ? green(`  ✓ the email reply already knew "${byEmail.collected.description}"`)
+      : red("  ✗ an email reply learned nothing — recognition did not fire")
   );
   console.log("");
 
-  process.exit(knewName && !askedAgain ? 0 : 1);
+  process.exit(knewName && !askedAgain && carriedConcern ? 0 : 1);
 }
 
 main().catch((e) => {

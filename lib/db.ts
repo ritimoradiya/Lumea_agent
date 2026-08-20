@@ -266,6 +266,34 @@ export async function markLeadNotified(leadId: string): Promise<void> {
   if (error) throw new Error(`markLeadNotified: ${error.message}`);
 }
 
+/**
+ * Claims a lead for sending, atomically.
+ *
+ * The old guard read notified_at and then sent, which is a race with a gap
+ * wide enough to drive through: delivery is fire-and-forget, so two turns
+ * arriving 86 seconds apart both found notified_at still null - it is only
+ * stamped after the mail goes out - and both sent. One customer received the
+ * same routine twice.
+ *
+ * This stamps first and only proceeds if the stamp was ours, so a second
+ * caller loses and returns. If sending then fails, releaseLead puts it back.
+ */
+export async function claimLeadForSending(leadId: string): Promise<boolean> {
+  const { data } = await db()
+    .from("leads")
+    .update({ notified_at: new Date().toISOString() })
+    .eq("id", leadId)
+    .is("notified_at", null)
+    .select("id");
+
+  return (data?.length ?? 0) > 0;
+}
+
+/** Hands a claimed lead back after a failure, so it can be retried. */
+export async function releaseLead(leadId: string): Promise<void> {
+  await db().from("leads").update({ notified_at: null }).eq("id", leadId);
+}
+
 export async function isLeadNotified(leadId: string): Promise<boolean> {
   const { data } = await db()
     .from("leads")
@@ -303,7 +331,7 @@ export async function recogniseByEmail(
 
   const { data: contact } = await supabase
     .from("contacts")
-    .select("id, first_name, last_name, phone")
+    .select("id, first_name, last_name, phone, description, experience")
     .eq("company_id", companyId)
     .ilike("email", address)
     .maybeSingle();
@@ -319,6 +347,8 @@ export async function recogniseByEmail(
   if (contact.first_name) known.firstName = contact.first_name as string;
   if (contact.last_name) known.lastName = contact.last_name as string;
   if (contact.phone) known.phone = contact.phone as string;
+  if (contact.description) known.description = contact.description as string;
+  if (contact.experience) known.experience = contact.experience as string;
 
   return {
     id: contact.id as string,
@@ -351,6 +381,10 @@ export async function rememberContact(
     first_name: collected.firstName ?? existing?.known.firstName ?? null,
     last_name: collected.lastName ?? existing?.known.lastName ?? null,
     phone: collected.phone ?? existing?.known.phone ?? null,
+    // The concern is the most useful thing to carry to the next conversation:
+    // without it a returning customer looks like a stranger.
+    description: collected.description ?? existing?.known.description ?? null,
+    experience: collected.experience ?? existing?.known.experience ?? null,
   };
 
   let contactId = existing?.id;
