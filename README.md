@@ -10,7 +10,6 @@ is the engine, not the storefront.
 **Live: [lumea-agent.netlify.app](https://lumea-agent.netlify.app)**
 
 - [The store](https://lumea-agent.netlify.app) — twelve products, chat widget bottom-right
-- [Try it as a text thread](https://lumea-agent.netlify.app/demo) — no phone number needed
 
 > The website is deployed. The email and Telegram workers run locally rather
 > than on Netlify, so those two channels answer only while a laptop is running
@@ -81,8 +80,8 @@ profile.
 ```
   web chat ──┐
   Telegram ──┼──→  respond()  ──→  Groq  or  Ollama
-  email ─────┤         │
-  simulator ─┘         └──→  Supabase  ──→  lead alert email
+  email ─────┘         │
+                       └──→  Supabase  ──→  lead alert email
 ```
 
 Every channel funnels into one `respond()` call, which is why adding a

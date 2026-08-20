@@ -12,6 +12,11 @@ import { emptyState } from "./agent/checklist";
  * must never be imported into anything that ships to a browser.
  */
 
+/**
+ * "simulator" is retained for old rows only. The text demo it belonged to has
+ * been removed and nothing writes this channel any more, but conversations
+ * recorded under it still exist and must still load.
+ */
 export type Channel = "web" | "telegram" | "email" | "simulator";
 
 let client: SupabaseClient | null = null;

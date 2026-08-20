@@ -1,4 +1,4 @@
-import { listThreads, getThread, countSimulatorThreads } from "@/lib/admin";
+import { listThreads, getThread } from "@/lib/admin";
 import { handBack, replyAsHuman, takeOver } from "../actions";
 import { FIELDS } from "@/lib/agent/checklist";
 
@@ -9,7 +9,6 @@ const CHANNEL_STYLE: Record<string, string> = {
   web: "bg-stone text-muted",
   telegram: "bg-[#dbe8f0] text-[#4a6b80]",
   email: "bg-[#e4e0ee] text-[#5f5680]",
-  simulator: "bg-[#efe2d6] text-[#8a6a4a]",
 };
 
 function ago(iso: string): string {
@@ -24,35 +23,22 @@ function ago(iso: string): string {
 export default async function InboxPage({
   searchParams,
 }: {
-  searchParams: Promise<{ thread?: string; demos?: string }>;
+  searchParams: Promise<{ thread?: string }>;
 }) {
-  const { thread: selectedId, demos } = await searchParams;
-  const showDemos = demos === "1";
+  const { thread: selectedId } = await searchParams;
 
-  const [threads, demoCount] = await Promise.all([
-    listThreads({ includeSimulator: showDemos }),
-    countSimulatorThreads(),
-  ]);
+  /**
+   * Simulator threads stay hidden. The text simulator has been removed, so
+   * the only rows on that channel are old demos - historical noise that would
+   * otherwise sit among real customers with no way to tell them apart.
+   */
+  const threads = await listThreads();
   const selected = await getThread(selectedId ?? threads[0]?.id ?? "");
 
   return (
     <div className="grid h-[calc(100vh-57px)] grid-cols-1 lg:grid-cols-[280px_1fr_260px]">
       {/* ── thread list ────────────────────────────────────── */}
       <aside className="overflow-y-auto border-r hairline">
-        {demoCount > 0 && (
-          <a
-            href={showDemos ? "/admin" : "/admin?demos=1"}
-            className="flex items-center justify-between border-b hairline bg-paper-2/70 px-4 py-2.5
-                       text-[11.5px] text-muted transition-colors hover:bg-paper-2"
-          >
-            <span>
-              {showDemos
-                ? "Showing demo threads"
-                : `${demoCount} demo thread${demoCount === 1 ? "" : "s"} hidden`}
-            </span>
-            <span className="text-faint">{showDemos ? "hide" : "show"}</span>
-          </a>
-        )}
         {threads.length === 0 && (
           <p className="p-6 text-[13px] leading-relaxed text-faint">
             No conversations yet. Open the site and send the widget a message.

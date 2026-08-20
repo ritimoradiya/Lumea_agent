@@ -26,7 +26,7 @@ import {
 /**
  * The single entry point for every channel.
  *
- * The web widget, Telegram, email, and the simulator all call this with
+ * The web widget, Telegram and email all call this with
  * the same three arguments. Nothing below here knows which door a message
  * came through, which is why adding a channel is a small job.
  */

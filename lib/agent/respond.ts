@@ -47,7 +47,7 @@ export type RespondResult = {
 
 /**
  * The core of the agent. Channel-agnostic on purpose: the web widget,
- * Telegram, email, and the simulator all call this same function.
+ * The web widget, Telegram and email all call this same function.
  *
  * Extraction runs BEFORE the reply rather than in the background. It
  * costs a few hundred milliseconds, but it means we can never ask a

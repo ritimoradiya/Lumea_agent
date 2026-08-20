@@ -368,13 +368,6 @@ export default async function Home() {
                 {company.supportHours}. The assistant answers outside them too;
                 a person replies the next working day.
               </p>
-              <Link
-                href="/demo"
-                className="mt-5 inline-block self-start text-[13px] underline
-                           decoration-black/20 underline-offset-4 hover:decoration-black/50"
-              >
-                Try it as a text thread
-              </Link>
             </div>
           </div>
         </div>

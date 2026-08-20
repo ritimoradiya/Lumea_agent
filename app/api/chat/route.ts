@@ -16,10 +16,11 @@ const Body = z.object({
   threadId: z.string().min(8).max(120),
   text: z.string().min(1).max(2000),
   /**
-   * Only the two browser-driven channels are selectable. Accepting any
-   * channel here would let a page impersonate Telegram or email.
+   * Web only. This used to accept "simulator" as well, for the text demo;
+   * that page is gone, and accepting any other channel would let a page
+   * impersonate Telegram or email.
    */
-  channel: z.enum(["web", "simulator"]).default("web"),
+  channel: z.literal("web").default("web"),
 });
 
 /** The opening line, so the widget can greet before the first message. */
