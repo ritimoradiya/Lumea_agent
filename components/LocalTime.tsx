@@ -1,16 +1,22 @@
-"use client";
-
 /**
- * A timestamp in the reader's timezone.
+ * A timestamp in the business's timezone.
  *
- * Formatting dates in a server component looked right and was wrong: the
- * server runs in UTC, so toLocaleString() there produces UTC rendered as
- * though it were local. Leads sent at 1:55pm were listed as 5:55pm.
+ * Pinned to America/New_York on purpose, rather than the reader's locale.
  *
- * This has to be a client component - only the browser knows the timezone.
- * suppressHydrationWarning is required and correct here: the server and the
- * client are meant to disagree, because they are in different places.
+ * Two earlier attempts were wrong. Formatting in a server component produced
+ * UTC rendered as though it were local, because that is where the server runs
+ * - a lead at 1:26pm was listed as 5:26pm. Making it a client component with
+ * suppressHydrationWarning did not fix it either: that flag tells React not to
+ * warn about the mismatch AND not to correct it, so the server's UTC string
+ * stayed on screen for good.
+ *
+ * An explicit zone sidesteps the problem entirely. It also matches what the
+ * person reading the inbox actually wants - the times a business operates in,
+ * the same on every device, rather than whatever timezone the viewer happens
+ * to be sitting in.
  */
+const ZONE = "America/New_York";
+
 export default function LocalTime({
   iso,
   timeOnly = false,
@@ -20,9 +26,13 @@ export default function LocalTime({
 }) {
   const d = new Date(iso);
 
-  return (
-    <time dateTime={iso} suppressHydrationWarning>
-      {timeOnly ? d.toLocaleTimeString() : d.toLocaleString()}
-    </time>
-  );
+  const text = timeOnly
+    ? d.toLocaleTimeString("en-US", { timeZone: ZONE, timeStyle: "short" })
+    : d.toLocaleString("en-US", {
+        timeZone: ZONE,
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+
+  return <time dateTime={iso}>{text} ET</time>;
 }

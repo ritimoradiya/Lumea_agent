@@ -91,9 +91,9 @@ export const ASKS: Ask[] = [
     fields: ["experience"],
     requires: ["experience"],
     label:
-      "whether they already have a daily routine or are starting out for the first time",
+      "whether they already have a daily routine - and if they do, WHICH products are in it - or whether they are starting out for the first time",
     reason:
-      "because a beginner should build up slowly while someone experienced can start on actives straight away",
+      "because a beginner should build up slowly, while someone who already has a routine needs advice that fits around what they own rather than replacing it",
   },
 ];
 

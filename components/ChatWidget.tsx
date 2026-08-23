@@ -137,6 +137,31 @@ export default function ChatWidget() {
               return next;
             });
           }
+
+          /**
+           * An empty bubble renders as the typing dots, so a stream that ends
+           * without a single token leaves them bouncing for ever. That is what
+           * a customer saw after the thread was taken over in the admin panel:
+           * the agent goes quiet by design, and the widget waited silently for
+           * a reply nobody was going to stream.
+           *
+           * Anything that finishes with nothing to show now says so.
+           */
+          if (payload.done) {
+            setMessages((m) => {
+              const next = [...m];
+              const last = next[next.length - 1];
+              if (last.role === "bot" && !last.text) {
+                next[next.length - 1] = {
+                  role: "bot",
+                  text: payload.handedToHuman
+                    ? "Thanks — a colleague has picked this up and will reply here shortly."
+                    : "Sorry, I did not catch that. Could you try again?",
+                };
+              }
+              return next;
+            });
+          }
         }
       }
     } catch {
@@ -197,7 +222,7 @@ export default function ChatWidget() {
             </div>
             <div className="mt-px flex items-center gap-1.5 text-[11.5px] text-faint">
               <span className="h-[5px] w-[5px] rounded-full bg-[#30d158]" />
-              Automated · a colleague reviews every reply
+              Usually replies in seconds
             </div>
           </div>
         </header>

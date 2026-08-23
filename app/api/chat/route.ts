@@ -61,6 +61,10 @@ export async function POST(request: Request) {
           done: true,
           complete: result.complete,
           collected: result.collected,
+          // A taken-over thread produces no tokens on purpose - a person is
+          // answering. The widget has to be told, or it waits for a reply
+          // that is never coming.
+          handedToHuman: result.handedToHuman,
         });
       } catch (error) {
         // The customer gets a polite line rather than a stack trace. Their

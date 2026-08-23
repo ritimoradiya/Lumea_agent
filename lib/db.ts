@@ -250,9 +250,38 @@ export async function createLeadIfNew(
 
   const { data: existing } = await supabase
     .from("leads")
-    .select("id, notified_at")
+    .select("id, notified_at, first_name, last_name, email, phone, description, experience")
     .eq("conversation_id", conversationId)
     .single();
+
+  /**
+   * Fill in anything learned since the row was written.
+   *
+   * The lead is created the moment there is enough to act on, which is often
+   * before the conversation has finished. One real lead was alerted as
+   * "no concern given" while the conversation went on to capture "oily skin" a
+   * minute later - the row was a snapshot nobody ever revisited.
+   *
+   * Blanks only, so a detail already recorded is never overwritten, and
+   * notified_at is untouched: this updates what we know, it does not re-send.
+   */
+  if (existing) {
+    const fills: Record<string, string> = {};
+    const pairs: [string, string | undefined, unknown][] = [
+      ["first_name", collected.firstName, existing.first_name],
+      ["last_name", collected.lastName, existing.last_name],
+      ["phone", collected.phone, existing.phone],
+      ["description", collected.description, existing.description],
+      ["experience", collected.experience, existing.experience],
+    ];
+    for (const [column, incoming, current] of pairs) {
+      if (incoming?.trim() && !current) fills[column] = incoming.trim();
+    }
+
+    if (Object.keys(fills).length) {
+      await supabase.from("leads").update(fills).eq("id", existing.id);
+    }
+  }
 
   return { id: existing?.id as string, isNew: false };
 }
