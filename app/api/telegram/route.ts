@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { extractMessage, sendMessage, sendTyping, type TelegramUpdate } from "@/lib/channels/telegram";
 import { handleInbound } from "@/lib/handle";
 import { getCompany, greetingFor } from "@/lib/company";
@@ -50,6 +51,8 @@ export async function POST(request: Request) {
       threadId: String(message.chatId),
       text: message.text,
       known: message.firstName ? { firstName: message.firstName } : undefined,
+      // Same reason as the chat route: this work must outlive the response.
+      schedule: (work) => after(work),
     });
 
     if (!result.handedToHuman) {

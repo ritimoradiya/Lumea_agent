@@ -51,6 +51,21 @@ export type InboundInput = {
    * is never overwritten by transport metadata.
    */
   known?: Collected;
+  /**
+   * How to run the follow-up work: writing the routine and sending two emails.
+   *
+   * Injected because the correct answer differs per runtime, and getting it
+   * wrong loses leads silently. On a serverless platform the function can be
+   * frozen the instant the response closes, so plain fire-and-forget work
+   * started after streaming a reply may simply never run - which is exactly
+   * what happened to a real lead: notified_at was stamped by the claim, the
+   * mail was never sent, and the admin panel reported it as delivered.
+   *
+   * Route handlers pass Next's `after`, which keeps the function alive.
+   * A long-lived worker can await it. The default matches neither, so callers
+   * that care must say so.
+   */
+  schedule?: (work: () => Promise<void>) => void;
 };
 
 export type InboundResult = {
@@ -192,26 +207,30 @@ export async function handleInbound(
     console.error(`[identity] ${(error as Error).message}`);
   }
 
-  // Fire-and-forget the follow-up work. The customer already has their
-  // reply; making them wait on a routine being written and two SMTP
-  // round-trips would add seconds to a conversation for no benefit.
+  // The customer already has their reply; making them wait on a routine being
+  // written and two SMTP round-trips would add seconds for no benefit. But it
+  // has to actually run - see `schedule` on InboundInput.
   if (isLeadComplete(result.state.collected)) {
-    void deliverLead({
-      companyId,
-      company,
-      conversationId: conversation.id,
-      collected: result.state.collected,
-      history: [
-        ...conversation.history,
-        { role: "user", content: input.text },
-        { role: "assistant", content: result.reply },
-      ],
-      channel: input.channel,
-    }).catch((error) => {
-      // Never let delivery failure surface to the customer — the lead row
-      // is already saved, and notified_at stays null so it can be retried.
-      console.error(`[lead delivery] ${(error as Error).message}`);
-    });
+    const run = () =>
+      deliverLead({
+        companyId,
+        company,
+        conversationId: conversation.id,
+        collected: result.state.collected,
+        history: [
+          ...conversation.history,
+          { role: "user", content: input.text },
+          { role: "assistant", content: result.reply },
+        ],
+        channel: input.channel,
+      }).catch((error) => {
+        // Never let delivery failure surface to the customer — the claim is
+        // released on failure, so `npm run recover` can pick it up.
+        console.error(`[lead delivery] ${(error as Error).message}`);
+      });
+
+    if (input.schedule) input.schedule(run);
+    else void run();
   }
 
   return {

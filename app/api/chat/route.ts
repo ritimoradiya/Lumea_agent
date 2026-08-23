@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { z } from "zod";
 import { handleInbound } from "@/lib/handle";
 import { getCompany, greetingFor } from "@/lib/company";
@@ -54,7 +55,15 @@ export async function POST(request: Request) {
 
       try {
         const result = await handleInbound(
-          { channel: body.channel, threadId: body.threadId, text: body.text },
+          {
+            channel: body.channel,
+            threadId: body.threadId,
+            text: body.text,
+            // Keeps the function alive for the routine and the two emails.
+            // Without this they are started as the response closes and the
+            // platform is free to freeze the instance before they finish.
+            schedule: (work) => after(work),
+          },
           (token) => send({ token })
         );
         send({

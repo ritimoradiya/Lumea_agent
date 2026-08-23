@@ -56,6 +56,16 @@ async function tick() {
   const company = await getCompany();
   const messages = await fetchUnread();
 
+  /**
+   * Lead delivery is collected and awaited before this pass returns.
+   *
+   * The worker exits after four minutes so the next scheduled run can start,
+   * and unawaited work started near that boundary is simply killed. The claim
+   * stamps notified_at first, so a lost send looks delivered - which is how a
+   * real lead went missing while the admin panel reported it as sent.
+   */
+  const pending: Promise<void>[] = [];
+
   for (const email of messages) {
     console.log(bold(`\n  ${email.fromName} <${email.from}>`));
     console.log(dim(`  subject: ${email.subject}`));
@@ -65,6 +75,7 @@ async function tick() {
     try {
       const result = await handleInbound({
         channel: "email",
+        schedule: (work) => pending.push(work()),
         // The thread root, so a whole exchange is one conversation rather
         // than a new one per message.
         threadId: email.threadRoot,
@@ -95,6 +106,11 @@ async function tick() {
       // dropping the customer's email.
       console.error(red(`  ✗ ${(error as Error).message} — leaving unread to retry`));
     }
+  }
+
+  if (pending.length) {
+    await Promise.allSettled(pending);
+    console.log(dim(`  (${pending.length} lead delivery job(s) finished)`));
   }
 }
 
